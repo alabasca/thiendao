@@ -71,7 +71,7 @@ def _embed_chuan_bi(ts: dict) -> discord.Embed:
     dao_hieu  = ts.get("dao_hieu", "Vô Danh")
     tong_tv   = ts.get("exp", 0)  # tu vi hiện có của Đăng Tiên Hậu Kỳ
     so_lan    = ts.get("so_lan_trung_sinh", 0)
-    ti_le     = ts.get("ti_le_van_dinh", 0.01)
+    ti_le     = ts.get("ti_le_van_dinh", 0.001)
     ti_le_pct = round(ti_le * 100, 2)
 
     du_tuvi = tong_tv >= VAN_DINH_TUVI_YEU_CAU

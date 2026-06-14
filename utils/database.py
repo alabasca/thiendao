@@ -204,7 +204,8 @@ CREATE TABLE IF NOT EXISTS tu_si (
     dotpha_tc_nl        TEXT    DEFAULT '{}',
     linh_can_lop2       TEXT    DEFAULT '{}',
     so_lan_trung_sinh   INTEGER DEFAULT 0,
-    ti_le_van_dinh      REAL    DEFAULT 0.01
+    ti_le_van_dinh      REAL    DEFAULT 0.01,
+    van_dinh_all_stat_pct REAL  DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS tong_mon_thanh_vien (
@@ -375,6 +376,7 @@ async def migrate_db():
         ("linh_can_lop2",      "TEXT DEFAULT '{}'"),
         ("so_lan_trung_sinh",  "INTEGER DEFAULT 0"),
         ("ti_le_van_dinh",     "REAL DEFAULT 0.01"),
+        ("van_dinh_all_stat_pct", "REAL DEFAULT 0"),
     ]
 
     async with pool.acquire() as conn:
@@ -1705,14 +1707,15 @@ async def get_giao_dich_log(user_id: int = None, loai: str = None,
 #  TRÙNG SINH / VẤN ĐỈNH TIÊN TÔN
 # ══════════════════════════════════════════════════════
 
-async def thuc_hien_trung_sinh(user_id: int) -> dict:
+async def thuc_hien_trung_sinh(user_id: int, bonus_all_stat_pct: float = 0.0) -> dict:
     """
     Thực hiện trùng sinh nhân vật.
 
     Giữ lại : dao_hieu, the_chat, sung_thu, sung_thu_active,
-               linh_can_so_huu (điểm về 0), so_lan_trung_sinh, ti_le_van_dinh
+               linh_can_so_huu (điểm về 0), dotpha_tc_nl,
+               so_lan_trung_sinh, ti_le_van_dinh, van_dinh_all_stat_pct
     Xóa sạch của acc này: linh_thach, phap_bao, dan_duoc, nguyen_lieu, linh_qua,
-      dotpha_tc_nl, manh_linh_can, linh_can_diem, cong_phap, phien_cho,
+            manh_linh_can, linh_can_diem, cong_phap, phien_cho,
       giao_dich_log 36h.
 
     Rollback đúng số lượng đã nhận từ acc trùng sinh (private_trade, 36h):
@@ -1739,6 +1742,8 @@ async def thuc_hien_trung_sinh(user_id: int) -> dict:
             # ── Tăng số lần trùng sinh + tỉ lệ Vấn Đỉnh mới ───────────────
             so_lan_moi = ts.get("so_lan_trung_sinh", 0) + 1
             ti_le_moi  = round(0.01 + so_lan_moi * 0.015, 4)
+            bonus_all_stat_pct = max(0.0, float(bonus_all_stat_pct or 0.0))
+            vd_bonus_moi = round(float(ts.get("van_dinh_all_stat_pct", 0.0) or 0.0) + bonus_all_stat_pct, 4)
 
             # ── Giữ lại linh căn sở hữu, reset điểm về 0 ───────────────────
             lc_ids = ts.get("linh_can_so_huu", [])
@@ -1881,11 +1886,12 @@ async def thuc_hien_trung_sinh(user_id: int) -> dict:
                     bc_thua_lan_truoc=0, tong_tu_vi=0,
                     linh_luc=0, hoi_tam=0, ho_tam=0, bao_kich=0, khang_bao=0,
                     linh_can_diem=$1, manh_linh_can='{}',
-                    linh_qua='{}', dotpha_tc_nl='{}', linh_can_lop2='{}',
+                    linh_qua='{}', linh_can_lop2='{}',
                     banner_id=0,
-                    so_lan_trung_sinh=$2, ti_le_van_dinh=$3
-                WHERE user_id=$4
-            """, json.dumps(lc_diem_reset), so_lan_moi, ti_le_moi, user_id)
+                    so_lan_trung_sinh=$2, ti_le_van_dinh=$3,
+                    van_dinh_all_stat_pct=$4
+                WHERE user_id=$5
+            """, json.dumps(lc_diem_reset), so_lan_moi, ti_le_moi, vd_bonus_moi, user_id)
 
             ts_new = await conn.fetchrow("SELECT * FROM tu_si WHERE user_id=$1", user_id)
             return dict(ts_new) if ts_new else {}

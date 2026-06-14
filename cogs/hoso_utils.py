@@ -24,7 +24,7 @@ from utils.config import (
     DOTPHA_TC_NGUYEN_LIEU,
     BOSS_SPAWN_HOURS_VN, boss_bar, BOSS_HP_BY_CG, emoji_hp_bar,
     DIEM_DANH_PHAN_THUONG, SU_KIEN_BI_CANH, BUFF_LABELS, DIEM_DANH_HE_SO,
-    CD_TU_LUYEN, CD_DOT_PHA, CD_KHAI_HOANG, CD_DIEM_DANH,
+    CD_TU_LUYEN, CD_DOT_PHA, CD_KHAI_HOANG,
     get_cg, get_cg_ten, bar, fmt, fmt_cd,
     exp_can_thiet, hp_max_cong_thuc, cong_cong_thuc, thu_cong_thuc,
     random_linh_can_co_ban,
@@ -40,6 +40,33 @@ from utils.database import (
 
 VN_TZ = timezone(timedelta(hours=7))
 BOSS_LIFETIME = 3600
+
+
+def diem_danh_cd_con_lai(last_claim_ts: int, now_ts: int | None = None) -> int:
+    """Điểm danh theo ngày VN: đã nhận hôm nay thì chờ tới 00:00 hôm sau."""
+    now_ts = int(now_ts if now_ts is not None else time.time())
+    last_claim_ts = int(last_claim_ts or 0)
+    if last_claim_ts <= 0:
+        return 0
+
+    now_vn = datetime.fromtimestamp(now_ts, VN_TZ)
+    last_vn = datetime.fromtimestamp(last_claim_ts, VN_TZ)
+    if now_vn.date() != last_vn.date():
+        return 0
+
+    next_midnight_vn = now_vn.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    return max(0, int(next_midnight_vn.timestamp()) - now_ts)
+
+
+def diem_danh_day_delta(last_claim_ts: int, now_ts: int | None = None) -> int:
+    """Số ngày lệch theo múi giờ VN giữa lần điểm danh gần nhất và hiện tại."""
+    now_ts = int(now_ts if now_ts is not None else time.time())
+    last_claim_ts = int(last_claim_ts or 0)
+    if last_claim_ts <= 0:
+        return 10**9
+    now_vn = datetime.fromtimestamp(now_ts, VN_TZ)
+    last_vn = datetime.fromtimestamp(last_claim_ts, VN_TZ)
+    return (now_vn.date() - last_vn.date()).days
 
 # Cache cho lazy import sung_thu (tránh circular + overhead lặp lại)
 _st_buff_fn = None
@@ -256,6 +283,13 @@ def _calc_stats(ts: dict) -> dict:  # noqa: PLR0912
     # drop_rate sủng thú → chỉ ảnh hưởng drop_m, KHÔNG ảnh hưởng lt_m
     if st_b.get("drop_rate"): drop_m = round(drop_m * (1 + st_b["drop_rate"] / 100), 2)
 
+    vd_pct = float(ts.get("van_dinh_all_stat_pct", 0.0) or 0.0)
+    if vd_pct > 0:
+        vd_mult = 1 + vd_pct / 100
+        at = int(at * vd_mult)
+        df = int(df * vd_mult)
+        hp_e = int(hp_e * vd_mult)
+
     # Tách riêng drop_rate và lt_m từ thể chất để hiển thị trong thuộc tính
     tc_drop_rate = tc_data.get("buff", {}).get("drop_rate", 0.0) if tc_data else 0.0
     tc_lt_m      = tc_data.get("buff", {}).get("lt_m", 1.0)      if tc_data else 1.0
@@ -268,7 +302,8 @@ def _calc_stats(ts: dict) -> dict:  # noqa: PLR0912
             "cl": int(at * 10 + df * 8 + hp_e * 0.1),
             "cd_tl_pct":   tc_data.get("buff", {}).get("cd_tu_luyen_pct", 0.0) if tc_data else 0.0,
             "tc_drop_rate": tc_drop_rate,
-            "tc_lt_m":      tc_lt_m}
+            "tc_lt_m":      tc_lt_m,
+            "van_dinh_all_stat_pct": vd_pct}
 
 def _calc_full_stats(ts: dict) -> dict:
     """Tính toàn bộ chỉ số thuộc tính như hiển thị trong /thuoctính."""
@@ -313,6 +348,16 @@ def _calc_full_stats(ts: dict) -> dict:
     # drop_rate và exp_pct lớp 2 áp vào drop_m / exp_m
     lc2_drop  = lc2.get("drop_rate", 0.0)
     lc2_exp   = lc2.get("exp_pct",   0.0)
+
+    vd_pct = float(ts.get("van_dinh_all_stat_pct", 0.0) or 0.0)
+    if vd_pct > 0:
+        vd_mult = 1 + vd_pct / 100
+        linh_luc = int(linh_luc * vd_mult)
+        hoi_tam = int(hoi_tam * vd_mult)
+        ho_tam = int(ho_tam * vd_mult)
+        bao_kich = bao_kich * vd_mult
+        khang_bao = khang_bao * vd_mult
+
     # Giới hạn — cap SAU khi cộng tất cả
     bao_kich  = min(bao_kich, 75)
     khang_bao = min(khang_bao, 60)
@@ -709,7 +754,7 @@ def _embed_hanh_dong(ts: dict, user: discord.User) -> discord.Embed:
         ("⚡ Tu Luyện",   ts["cd_tu_luyen"]  + CD_TU_LUYEN   - now),
         ("💥 Đột Phá (CD thất bại)", ts["cd_dot_pha"] + CD_DOT_PHA - now),
         ("⛏️ Khai Hoang", ts["cd_khai_hoang"]+ CD_KHAI_HOANG - now),
-        ("📅 Điểm Danh",  ts["cd_diem_danh"] + CD_DIEM_DANH  - now),
+        ("📅 Điểm Danh",  diem_danh_cd_con_lai(ts.get("cd_diem_danh", 0), now)),
     ]
     for name, cd in cds:
         embed.add_field(name=name, value="✅ Sẵn sàng!" if cd <= 0 else fmt_cd(cd), inline=True)

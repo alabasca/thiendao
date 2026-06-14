@@ -90,7 +90,8 @@ def _embed_chuan_bi(ts: dict) -> discord.Embed:
         value=(
             f"{'✅' if du_tuvi else '❌'} Tu vi hiện có: **{fmt(tong_tv)}** / {fmt(VAN_DINH_TUVI_YEU_CAU)}\n"
             f"🎲 Tỉ lệ thành công: **{ti_le_pct}%**\n"
-            f"🔄 Số lần đã trùng sinh: **{so_lan}**"
+            f"🔄 Số lần đã trùng sinh: **{so_lan}**\n"
+            f"📈 Bonus all-stat tích lũy: **+{vd_bonus:.2f}%**"
         ),
         inline=False,
     )
@@ -98,7 +99,10 @@ def _embed_chuan_bi(ts: dict) -> discord.Embed:
         name="💡 Sau khi trùng sinh",
         value=(
             "• Giữ lại: đạo hiệu, thể chất, sủng thú, linh căn (điểm về 0)\n"
+            "• Giữ lại: tài nguyên đột phá thể chất trong kho\n"
             "• Tỉ lệ Vấn Đỉnh lần sau tăng **+1.5%**\n"
+            "• Thành công: nhận **+5% all-stat** vĩnh viễn\n"
+            "• Thất bại: nhận **+1% all-stat** vĩnh viễn\n"
             "• Tỉ lệ drop linh quả tăng **×1.5**, không giới hạn cảnh giới\n"
             "• Xóa: linh thạch, phiên chợ, giao dịch gần đây"
         ),
@@ -173,8 +177,10 @@ class VanDinhView(discord.ui.View):
         # Roll
         thanh_cong = random.random() < ti_le
 
+        bonus_stat = 5.0 if thanh_cong else 1.0
+
         # Thực hiện trùng sinh (dù thành công hay thất bại)
-        await thuc_hien_trung_sinh(inter.user.id)
+        await thuc_hien_trung_sinh(inter.user.id, bonus_all_stat_pct=bonus_stat)
 
         # Broadcast toàn server
         if thanh_cong:
@@ -201,6 +207,7 @@ class VanDinhView(discord.ui.View):
                     f"**{dao_hieu}** đã chạm tới đỉnh của thế giới!\n\n"
                     "Nhưng thế giới không thể chịu đựng — **Trùng Sinh** đã bắt đầu...\n\n"
                     "Bạn đã được đưa trở về **Luyện Khí Sơ Kỳ**.\n"
+                    "Bạn nhận thêm **+5% all-stat** vĩnh viễn.\n"
                     "Tỉ lệ đột phá Vấn Đỉnh lần sau đã tăng thêm **+1.5%**!"
                 ),
                 color=0xFFD700,
@@ -211,6 +218,7 @@ class VanDinhView(discord.ui.View):
                 description=(
                     f"**{dao_hieu}** không thể vượt qua ý chí thiên đạo...\n\n"
                     "**Trùng Sinh** bắt đầu — trở về **Luyện Khí Sơ Kỳ**.\n"
+                    "Bạn nhận thêm **+1% all-stat** vĩnh viễn.\n"
                     "Tỉ lệ đột phá Vấn Đỉnh lần sau đã tăng thêm **+1.5%**!"
                 ),
                 color=0x888888,
@@ -220,11 +228,13 @@ class VanDinhView(discord.ui.View):
         if ts_after:
             ti_le_moi = ts_after.get("ti_le_van_dinh", 0.01)
             so_lan_moi = ts_after.get("so_lan_trung_sinh", 0)
+            vd_bonus_moi = float(ts_after.get("van_dinh_all_stat_pct", 0.0) or 0.0)
             embed.add_field(
                 name="📊 Sau trùng sinh",
                 value=(
                     f"🔄 Đã trùng sinh: **{so_lan_moi}** lần\n"
-                    f"🎲 Tỉ lệ Vấn Đỉnh tiếp theo: **{round(ti_le_moi*100, 2)}%**"
+                    f"🎲 Tỉ lệ Vấn Đỉnh tiếp theo: **{round(ti_le_moi*100, 2)}%**\n"
+                    f"📈 Bonus all-stat hiện tại: **+{vd_bonus_moi:.2f}%**"
                 ),
                 inline=False,
             )

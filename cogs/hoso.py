@@ -26,6 +26,7 @@ from cogs.hoso_utils import (
     _build_inventory, _embed_kho_trang,
     _boss_current_window, _boss_is_active, _embed_the_gioi,
     VN_TZ, BOSS_LIFETIME, ITEMS_PER_PAGE,
+    diem_danh_cd_con_lai, diem_danh_day_delta,
 )
 
 # ── Shared config/db imports ───────────────────────────────
@@ -34,7 +35,7 @@ from utils.config import (
     DAN_DUOC, DAN_TU_LUYEN, NGUYEN_LIEU, BI_CANH, BOSS_THE_GIOI,
     BOSS_SPAWN_HOURS_VN, boss_bar, BOSS_HP_BY_CG, emoji_hp_bar,
     DIEM_DANH_PHAN_THUONG, BUFF_LABELS, DIEM_DANH_HE_SO,
-    CD_TU_LUYEN, CD_DOT_PHA, CD_KHAI_HOANG, CD_DIEM_DANH,
+    CD_TU_LUYEN, CD_DOT_PHA, CD_KHAI_HOANG,
     get_cg, get_cg_ten, bar, fmt, fmt_cd,
     exp_can_thiet, hp_max_cong_thuc, cong_cong_thuc, thu_cong_thuc,
     random_linh_can_co_ban, OWNER_ID,
@@ -725,13 +726,14 @@ class HoSoView(discord.ui.View):
         await inter.response.defer(ephemeral=True)
         ts  = await get_tu_si(inter.user.id)
         now = int(time.time())
-        cd  = ts["cd_diem_danh"] + CD_DIEM_DANH - now
+        cd  = diem_danh_cd_con_lai(ts.get("cd_diem_danh", 0), now)
         if cd > 0:
             embed = e_warn("📅 Đã Điểm Danh", f"Quay lại sau: **{fmt_cd(cd)}**\nChuỗi hiện tại: **{ts['chuoi_diem_danh']}** ngày")
             return await safe_followup(inter, embed=embed, ephemeral=True)
 
-        # Tính chuỗi: nếu bỏ > 48h thì reset
-        if ts["cd_diem_danh"] > 0 and now - ts["cd_diem_danh"] > CD_DIEM_DANH * 2:
+        # Tính chuỗi theo ngày VN: qua 00:00 là có thể điểm danh tiếp
+        day_delta = diem_danh_day_delta(ts.get("cd_diem_danh", 0), now)
+        if day_delta > 1:
             chuoi = 1
         else:
             chuoi = (ts["chuoi_diem_danh"] % 7) + 1
@@ -882,6 +884,21 @@ class HoSoView(discord.ui.View):
             if d.get("cg_yeu_cau") != ts["canh_gioi"]: continue
             if d.get("cap_nho_yeu_cau") is not None: continue
             dan_dot_pha = d; break
+
+        # Đại cảnh bắt buộc phải có đan đột phá tương ứng
+        if la_dai_canh:
+            if not dan_dot_pha:
+                return await safe_followup(inter,
+                    embed=e_warn("🔒 Thiếu Đan Đột Phá",
+                        "Cảnh giới này chưa có đan đột phá hợp lệ. Vui lòng báo quản trị để cập nhật cấu hình."),
+                    ephemeral=True)
+            so_dan_dp = ts.get("dan_duoc", {}).get(str(dan_dot_pha["id"]), 0)
+            if so_dan_dp < 1:
+                return await safe_followup(inter,
+                    embed=e_warn("🔒 Thiếu Đan Đột Phá",
+                        f"Cần **1× {dan_dot_pha['emoji']} {dan_dot_pha['ten']}** để đột phá đại cảnh.\n"
+                        f"Trong kho hiện có: **{so_dan_dp}**"),
+                    ephemeral=True)
 
         if ok:
             new_cap = ts["cap_nho"] + 1

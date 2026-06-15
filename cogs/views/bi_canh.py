@@ -394,7 +394,8 @@ class BiCanhChonView(discord.ui.View):
                 try:
                     await inter.response.defer()
                 except Exception:
-                    log.exception("Lỗi bi_canh")
+                    log.exception("Lỗi defer bi_canh")
+                    return
                 # Cleanup sessions cũ
                 _cleanup_stale_sessions()
                 # Vào bí cảnh luôn với full HP
@@ -441,7 +442,11 @@ class BiCanhChonView(discord.ui.View):
             except Exception:
                 log.exception("Lỗi khiêu chiến bí cảnh")
                 try:
-                    if not inter.response.is_done():
+                    if inter.response.is_done():
+                        await safe_followup(inter,
+                            embed=e_loi("❌ Lỗi", "Có lỗi xảy ra khi vào bí cảnh. Vui lòng thử lại."),
+                            ephemeral=True)
+                    else:
                         await inter.response.send_message(
                             embed=e_loi("❌ Lỗi", "Có lỗi xảy ra khi vào bí cảnh. Vui lòng thử lại."),
                             ephemeral=True)

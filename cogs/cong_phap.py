@@ -11,6 +11,7 @@ from utils.bot_emojis import E_LINH_THACH, CP_CAP_EMOJI, CP_PHAM_EMOJI, E_CAP_TH
 from data.cong_phap_data import (
     PHAM_DMG_MULT, CAP_DMG_MULT,
     LOAI_SK, LOAI_SK_LABEL,
+    LOAI_CD, LOAI_DMGM,
     PHAM_EMOJI, CAP_COLOR, CONG_PHAP,
 )
 

@@ -3,11 +3,13 @@ COG: Admin Log — /adminlog
 Xuất log giao dịch phường thị + tặng quà ra file Excel.
 Chỉ OWNER_ID mới dùng được.
 """
+from __future__ import annotations
+from typing import Any
 import discord
 from discord import app_commands
 from discord.ext import commands
 from utils.embeds import e_loi, e_ok, owner_only_check
-from utils.config import OWNER_ID
+from utils.config import OWNER_IDS
 from utils.database import get_giao_dich_log
 import io, time, datetime
 from utils.embeds import safe_followup
@@ -27,9 +29,9 @@ def _ts_to_str(ts: int) -> str:
     return datetime.datetime.fromtimestamp(ts, tz=datetime.timezone(datetime.timedelta(hours=7)))\
         .strftime("%Y-%m-%d %H:%M:%S")
 
-async def _fetch_display_names(bot: discord.Client, user_ids: set) -> dict[int, str]:
+async def _fetch_display_names(bot: discord.Client, user_ids: set[int]) -> dict[int, str]:
     """Lấy display name của từng user_id. Cache theo lần gọi."""
-    result = {}
+    result: dict[int, str] = {}
     for uid in user_ids:
         try:
             user = bot.get_user(uid) or await bot.fetch_user(uid)
@@ -38,17 +40,18 @@ async def _fetch_display_names(bot: discord.Client, user_ids: set) -> dict[int, 
             result[uid] = f"[ID:{uid}]"
     return result
 
-async def _build_excel(rows: list, bot: discord.Client) -> bytes:
+async def _build_excel(rows: list[dict[str, Any]], bot: discord.Client) -> bytes:
     """Tạo file Excel từ list rows, trả về bytes."""
     try:
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         from openpyxl.utils import get_column_letter
+        from openpyxl.worksheet.worksheet import Worksheet
     except ImportError:
         raise RuntimeError("Thiếu thư viện openpyxl! Chạy: pip install openpyxl")
 
     # Thu thập tất cả user_id cần resolve
-    uid_set = set()
+    uid_set: set[int] = set()
     for r in rows:
         if r.get("sender_id"):   uid_set.add(r["sender_id"])
         if r.get("receiver_id"): uid_set.add(r["receiver_id"])
@@ -84,7 +87,7 @@ async def _build_excel(rows: list, bot: discord.Client) -> bytes:
 
     alt_fill = PatternFill("solid", fgColor="EEF4FB")
 
-    def _setup_sheet(ws):
+    def _setup_sheet(ws: Worksheet) -> None:
         ws.append(headers)
         for ci, (hdr, w) in enumerate(zip(headers, col_widths), 1):
             cell = ws.cell(row=1, column=ci)
@@ -106,7 +109,7 @@ async def _build_excel(rows: list, bot: discord.Client) -> bytes:
         "tang_dan":  PatternFill("solid", fgColor="FEF9E7"),
     }
 
-    def _write_row(ws, row_data: list, row_idx: int, loai: str):
+    def _write_row(ws: Worksheet, row_data: list[Any], row_idx: int, loai: str) -> None:
         for ci, val in enumerate(row_data, 1):
             cell = ws.cell(row=row_idx, column=ci, value=val)
             cell.border = border
@@ -128,7 +131,7 @@ async def _build_excel(rows: list, bot: discord.Client) -> bytes:
         lt   = r.get("gia_lt", 0) or 0
         tong_lt[loai] = tong_lt.get(loai, 0) + lt
 
-        row_data = [
+        row_data: list[Any] = [
             r.get("id", ""),
             LOAI_LABEL.get(loai, loai),
             _ts_to_str(ts),
@@ -165,7 +168,7 @@ async def _build_excel(rows: list, bot: discord.Client) -> bytes:
               for loai in ["phien_cho", "tang_lt", "tang_dan"]}
 
     for ri, loai in enumerate(["phien_cho", "tang_lt", "tang_dan"], 2):
-        row = [LOAI_LABEL.get(loai, loai), counts[loai], tong_lt.get(loai, 0)]
+        row: list[Any] = [LOAI_LABEL.get(loai, loai), counts[loai], tong_lt.get(loai, 0)]
         fill = loai_fill.get(loai, alt_fill)
         for ci, val in enumerate(row, 1):
             c = ws_sum.cell(row=ri, column=ci, value=val)
@@ -173,7 +176,7 @@ async def _build_excel(rows: list, bot: discord.Client) -> bytes:
             c.alignment = Alignment(horizontal="center", vertical="center")
 
     # Tổng cộng
-    total_row = ["TỔNG CỘNG", sum(counts.values()), sum(tong_lt.values())]
+    total_row: list[Any] = ["TỔNG CỘNG", sum(counts.values()), sum(tong_lt.values())]
     total_fill = PatternFill("solid", fgColor="1F4E79")
     for ci, val in enumerate(total_row, 1):
         c = ws_sum.cell(row=5, column=ci, value=val)
@@ -214,18 +217,18 @@ class AdminLogCog(commands.Cog):
         app_commands.Choice(name="Tặng LT",     value="tang_lt"),
         app_commands.Choice(name="Tặng Đan",    value="tang_dan"),
     ])
-    @owner_only_check(OWNER_ID)
+    @owner_only_check(OWNER_IDS)
     async def adminlog(
         self,
         inter: discord.Interaction,
-        loai: app_commands.Choice[str] = None,
-        user_id: str = None,
+        loai: app_commands.Choice[str] | None = None,
+        user_id: str | None = None,
         limit: int = 2000,
-    ):
+    ) -> None:
         await inter.response.defer(ephemeral=True, thinking=True)
 
         # Parse user_id
-        uid = None
+        uid: int | None = None
         if user_id:
             try:
                 uid = int(user_id.strip())
@@ -234,10 +237,10 @@ class AdminLogCog(commands.Cog):
                     embed=e_loi("❌ User ID không hợp lệ", "Vui lòng nhập số Discord ID."),
                     ephemeral=True)
 
-        loai_val = None if (loai is None or loai.value == "all") else loai.value
+        loai_val: str | None = None if (loai is None or loai.value == "all") else loai.value
         limit = max(1, min(limit, 5000))
 
-        rows = await get_giao_dich_log(user_id=uid, loai=loai_val, limit=limit)
+        rows: list[dict[str, Any]] = await get_giao_dich_log(user_id=uid, loai=loai_val, limit=limit)
 
         if not rows:
             return await safe_followup(inter, 

@@ -11,7 +11,7 @@ from discord.ext import commands
 
 import random
 from utils.config import (
-    OWNER_ID, CANH_GIOI, PHAP_BAO, PHAP_BAO_BY_BASE, PHAP_BAO_BY_ID, LINH_CAN, LINH_CAN_BY_ID,
+    OWNER_IDS, CANH_GIOI, PHAP_BAO, PHAP_BAO_BY_BASE, PHAP_BAO_BY_ID, LINH_CAN, LINH_CAN_BY_ID,
     THE_CHAT, THE_CHAT_BY_ID, DAN_DUOC,
     BOSS_THE_GIOI, BOSS_HP_BY_CG,
     LINH_QUA, LINH_QUA_BY_ID, MANH_LINH_CAN_EMOJI, DOTPHA_TC_NGUYEN_LIEU,
@@ -48,7 +48,7 @@ give_group = app_commands.Group(name="give", description="[Admin] Ban thưởng 
 
 @give_group.command(name="linhthach", description="Give linh thạch")
 @app_commands.describe(nguoi_dung="Người nhận", so_luong="Số lượng (âm = trừ)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_lt(inter: discord.Interaction, nguoi_dung: discord.Member, so_luong: int):
     await inter.response.defer(ephemeral=False)
     ts = await get_tu_si(nguoi_dung.id)
@@ -62,7 +62,7 @@ async def give_lt(inter: discord.Interaction, nguoi_dung: discord.Member, so_luo
 
 @give_group.command(name="tuvi", description="Set cảnh giới")
 @app_commands.describe(nguoi_dung="Người nhận", canh_gioi="0=Luyện Khí…9=Đăng Tiên", cap_nho="1-9")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_tv(inter: discord.Interaction, nguoi_dung: discord.Member,
                   canh_gioi: app_commands.Range[int,0,9], cap_nho: app_commands.Range[int,1,9]):
     await inter.response.defer(ephemeral=False)
@@ -84,7 +84,7 @@ async def give_tv(inter: discord.Interaction, nguoi_dung: discord.Member,
     pb_id="ID pháp bảo (0-89) — hoặc dùng id_base + canh_gioi",
     id_base="Loại pháp bảo (0=Hiệu Giác … 9=Cổ Cầm)",
     canh_gioi="Cảnh giới pháp bảo (0-8)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_pb(inter: discord.Interaction, nguoi_dung: discord.Member,
                   pb_id: int = -1, id_base: int = -1, canh_gioi: int = -1):
     await inter.response.defer(ephemeral=False)
@@ -112,7 +112,7 @@ async def give_pb(inter: discord.Interaction, nguoi_dung: discord.Member,
     app_commands.Choice(name=f"{lc['emoji']} {lc['ten']} ({lc['loai']})", value=lc["id"])
     for lc in LINH_CAN
 ])
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_lc(inter: discord.Interaction, nguoi_dung: discord.Member, linh_can: str):
     await inter.response.defer(ephemeral=False)
     ts = await get_tu_si(nguoi_dung.id)
@@ -133,7 +133,7 @@ async def give_lc(inter: discord.Interaction, nguoi_dung: discord.Member, linh_c
 
 @give_group.command(name="dan", description="Give đan dược")
 @app_commands.describe(nguoi_dung="Người nhận", dan_id="ID đan dược", so_luong="Số lượng")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_dan(inter: discord.Interaction, nguoi_dung: discord.Member,
                    dan_id: app_commands.Range[int,0,9],
                    so_luong: app_commands.Range[int,1,999] = 1):
@@ -153,7 +153,7 @@ async def give_dan(inter: discord.Interaction, nguoi_dung: discord.Member,
 
 @give_group.command(name="theluc", description="Set/cộng thể lực (0 = full 250)")
 @app_commands.describe(nguoi_dung="Người nhận", so_luong="Số lượng cộng thêm (0 = full)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_tl(inter: discord.Interaction, nguoi_dung: discord.Member,
                   so_luong: int = 0):
     await inter.response.defer(ephemeral=False)
@@ -169,7 +169,7 @@ async def give_tl(inter: discord.Interaction, nguoi_dung: discord.Member,
 
 
 @give_group.command(name="reset", description="Xóa hoàn toàn nhân vật — user tạo lại bằng /hoso")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_reset(inter: discord.Interaction, nguoi_dung: discord.Member):
     await inter.response.defer(ephemeral=True)
     ts = await get_tu_si(nguoi_dung.id)
@@ -190,7 +190,7 @@ async def give_reset(inter: discord.Interaction, nguoi_dung: discord.Member):
 
 @give_group.command(name="world_boss", description="[Admin] Spawn boss thế giới để test")
 @app_commands.describe(boss_id="0=Hình Thiên 1=Trường Thừa 2=Đào Ngột 3=Kế Mông (-1=random)", canh_gioi="Cảnh giới boss (3-6, -1=random)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_world_boss(inter: discord.Interaction, boss_id: int = -1, canh_gioi: int = -1):
     await inter.response.defer(ephemeral=True)
     if boss_id < 0 or boss_id >= len(BOSS_THE_GIOI):
@@ -249,7 +249,7 @@ async def give_world_boss(inter: discord.Interaction, boss_id: int = -1, canh_gi
     the_chat_id="ID thể chất (để trống để xem danh sách)",
     xoa="True = xóa thể chất hiện tại (về chưa có)"
 )
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_the_chat(inter: discord.Interaction, nguoi_dung: discord.Member,
                         the_chat_id: str = "", xoa: bool = False):
     await inter.response.defer(ephemeral=True)
@@ -284,7 +284,7 @@ async def give_the_chat(inter: discord.Interaction, nguoi_dung: discord.Member,
     app_commands.Choice(name=f"{lc['emoji']} {lc['ten']}", value=lc["id"])
     for lc in LINH_CAN
 ])
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def remove_lc(inter: discord.Interaction, nguoi_dung: discord.Member, linh_can: str = ""):
     await inter.response.defer(ephemeral=True)
     ts = await get_tu_si(nguoi_dung.id)
@@ -313,7 +313,7 @@ async def remove_lc(inter: discord.Interaction, nguoi_dung: discord.Member, linh
 
 @give_group.command(name="nguyenlieu", description="[Owner] Give nguyên liệu")
 @app_commands.describe(nguoi_dung="Người nhận", nl_id="ID nguyên liệu (0-5)", so_luong="Số lượng")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_nl(inter: discord.Interaction, nguoi_dung: discord.Member,
                   nl_id: app_commands.Range[int,0,5],
                   so_luong: app_commands.Range[int,1,9999] = 1):
@@ -330,7 +330,7 @@ async def give_nl(inter: discord.Interaction, nguoi_dung: discord.Member,
 
 @give_group.command(name="dotphatcnl", description="[Owner] Give tai nguyen dot pha the chat")
 @app_commands.describe(nguoi_dung="Nguoi nhan", so_luong="So luong moi loai (1-99)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_dtc_nl(inter: discord.Interaction, nguoi_dung: discord.Member,
                       so_luong: app_commands.Range[int,1,99] = 1):
     await inter.response.defer(ephemeral=True)
@@ -349,7 +349,7 @@ async def give_dtc_nl(inter: discord.Interaction, nguoi_dung: discord.Member,
 
 @give_group.command(name="manhlinh", description="[Owner] Give manh linh can")
 @app_commands.describe(nguoi_dung="Nguoi nhan", so_luong="So luong moi loai")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_manh(inter: discord.Interaction, nguoi_dung: discord.Member,
                     so_luong: app_commands.Range[int,1,999] = 1):
     await inter.response.defer(ephemeral=True)
@@ -365,7 +365,7 @@ async def give_manh(inter: discord.Interaction, nguoi_dung: discord.Member,
 
 @give_group.command(name="linhqua", description="[Owner] Give linh qua")
 @app_commands.describe(nguoi_dung="Nguoi nhan", so_luong="So luong moi loai")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_lq(inter: discord.Interaction, nguoi_dung: discord.Member,
                   so_luong: app_commands.Range[int,1,999] = 1):
     await inter.response.defer(ephemeral=True)
@@ -381,7 +381,7 @@ async def give_lq(inter: discord.Interaction, nguoi_dung: discord.Member,
 
 @give_group.command(name="sungthuu", description="[Owner] Give sủng thú cho người chơi")
 @app_commands.describe(nguoi_dung="Người nhận", sung_thu_id="ID sủng thú (0-17)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_st(inter: discord.Interaction, nguoi_dung: discord.Member,
                   sung_thu_id: app_commands.Range[int, 0, 17]):
     await inter.response.defer(ephemeral=False)
@@ -408,7 +408,7 @@ async def give_st(inter: discord.Interaction, nguoi_dung: discord.Member,
 
 @give_group.command(name="wipe_server", description="[Owner] Xóa toàn bộ data nhân vật, giữ lại guild config & boss state")
 @app_commands.describe(xac_nhan="Nhập 'XAC NHAN WIPE' để xác nhận (không thể hoàn tác!)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_wipe_server(inter: discord.Interaction, xac_nhan: str):
     await inter.response.defer(ephemeral=True)
 
@@ -476,7 +476,7 @@ async def give_wipe_server(inter: discord.Interaction, xac_nhan: str):
 
 
 @give_group.command(name="backup", description="[Owner] Backup toàn bộ DB → file JSON gửi lên Discord")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_backup(inter: discord.Interaction):
     """Dump toàn bộ dữ liệu PostgreSQL ra file JSON và gửi lên channel hiện tại."""
     import json
@@ -581,7 +581,7 @@ async def give_backup(inter: discord.Interaction):
 
 @give_group.command(name="skipcddotpha", description="[Owner] Xóa cooldown đột phá cho người chơi")
 @app_commands.describe(nguoi_dung="Tu sĩ cần skip cooldown đột phá")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_skip_cd_dotpha(inter: discord.Interaction, nguoi_dung: discord.Member):
     await inter.response.defer(ephemeral=True)
     ts = await get_tu_si(nguoi_dung.id)
@@ -597,7 +597,7 @@ async def give_skip_cd_dotpha(inter: discord.Interaction, nguoi_dung: discord.Me
 
 @give_group.command(name="fulltuvi", description="[Owner] Set tu vi đầy đủ để đột phá (đúng ngưỡng cảnh giới hiện tại)")
 @app_commands.describe(nguoi_dung="Tu sĩ cần fill tu vi")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_full_tuvi(inter: discord.Interaction, nguoi_dung: discord.Member):
     await inter.response.defer(ephemeral=True)
     ts = await get_tu_si(nguoi_dung.id)
@@ -615,7 +615,7 @@ async def give_full_tuvi(inter: discord.Interaction, nguoi_dung: discord.Member)
 
 @give_group.command(name="maxtuvi", description="[Owner] Tăng tu vi lên max 1 cảnh giới (hậu kì)")
 @app_commands.describe(nguoi_dung="Tu sĩ cần tăng tu vi")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_max_tuvi(inter: discord.Interaction, nguoi_dung: discord.Member):
     await inter.response.defer(ephemeral=True)
     ts = await get_tu_si(nguoi_dung.id)
@@ -635,7 +635,7 @@ async def give_max_tuvi(inter: discord.Interaction, nguoi_dung: discord.Member):
 
 @give_group.command(name="tongtuvi", description="[Owner] Cộng/trừ tổng tu vi tích lũy cho người chơi")
 @app_commands.describe(nguoi_dung="Tu sĩ cần chỉnh tổng tu vi", so_luong="Số lượng (âm = trừ)")
-@owner_only_check(OWNER_ID)
+@owner_only_check(OWNER_IDS)
 async def give_tong_tuvi(inter: discord.Interaction, nguoi_dung: discord.Member, so_luong: int):
     await inter.response.defer(ephemeral=True)
     ts = await get_tu_si(nguoi_dung.id)

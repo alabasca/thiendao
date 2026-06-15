@@ -1,6 +1,7 @@
 """
 CombatTaskCog — auto-combat runner.
 """
+from __future__ import annotations
 import asyncio
 import logging
 import discord
@@ -14,29 +15,29 @@ log = logging.getLogger("combat_task")
 @dataclass
 class CombatJob:
     inter:     discord.Interaction
-    logs:      list
+    logs:      list[Any]
     embed_fn:  Callable[[int], discord.Embed]
     view:      discord.ui.View
     on_finish: Callable[[], Awaitable[None]]
     delay:     float = 1.2
     _skip:     bool  = field(default=False, init=False)
-    _task:     object = field(default=None, init=False)
+    _task:     asyncio.Task[None] | None = field(default=None, init=False)
 
-    def skip(self):
+    def skip(self) -> None:
         self._skip = True
 
 
 class CombatTaskCog(commands.Cog, name="CombatTaskCog"):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self._running: dict[int, CombatJob] = {}
 
-    def cog_unload(self):
+    async def cog_unload(self) -> None:
         for job in list(self._running.values()):
             if job._task and not job._task.done():
                 job._task.cancel()
 
-    def enqueue(self, job: CombatJob):
+    def enqueue(self, job: CombatJob) -> None:
         uid = job.inter.user.id
         old = self._running.get(uid)
         if old and old._task and not old._task.done():
@@ -47,12 +48,12 @@ class CombatTaskCog(commands.Cog, name="CombatTaskCog"):
         task.add_done_callback(
             lambda t: self._running.pop(uid, None) if self._running.get(uid) is job else None)
 
-    def skip_current(self, user_id: int):
+    def skip_current(self, user_id: int) -> None:
         job = self._running.get(user_id)
         if job:
             job.skip()
 
-    async def _run_job(self, job: CombatJob):
+    async def _run_job(self, job: CombatJob) -> None:
         total = len(job.logs)
         log.info(f"Combat start: user={job.inter.user.id} turns={total}")
 
@@ -110,5 +111,5 @@ class CombatTaskCog(commands.Cog, name="CombatTaskCog"):
             log.error(f"Combat on_finish error: {e}", exc_info=True)
 
 
-async def setup(bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(CombatTaskCog(bot))

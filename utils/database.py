@@ -334,6 +334,15 @@ CREATE TABLE IF NOT EXISTS active_vote (
     votes_json  TEXT    DEFAULT '{}',
     msgs_json   TEXT    DEFAULT '{}'
 );
+
+CREATE TABLE IF NOT EXISTS promo_codes (
+    code        TEXT    PRIMARY KEY,
+    goi         TEXT    NOT NULL,       -- 'dot_pha_tc' | 'ngu_hanh_qua' | 'phap_bao'
+    nguoi_tao   BIGINT  DEFAULT 0,
+    nguoi_dung  BIGINT  DEFAULT 0,     -- 0 = chưa dùng
+    ngay_tao    BIGINT  DEFAULT 0,
+    ngay_dung   BIGINT  DEFAULT 0
+);
 """
 
 
@@ -546,6 +555,21 @@ async def migrate_db():
             """)
         except Exception as e:
             log.warning(f"DB migration active_vote: {e}")
+
+        # promo_codes table (migration safe)
+        try:
+            await conn.execute("""
+                CREATE TABLE IF NOT EXISTS promo_codes (
+                    code        TEXT    PRIMARY KEY,
+                    goi         TEXT    NOT NULL,
+                    nguoi_tao   BIGINT  DEFAULT 0,
+                    nguoi_dung  BIGINT  DEFAULT 0,
+                    ngay_tao    BIGINT  DEFAULT 0,
+                    ngay_dung   BIGINT  DEFAULT 0
+                )
+            """)
+        except Exception as e:
+            log.warning(f"DB migration promo_codes: {e}")
 
     log.info("DB migration complete")
 
@@ -1672,8 +1696,8 @@ async def log_giao_dich(loai: str, sender_id: int, receiver_id: int,
           so_luong, gia_lt, int(time.time()), ghi_chu))
 
 
-async def get_giao_dich_log(user_id: int = None, loai: str = None,
-                             limit: int = 50, offset: int = 0) -> list:
+async def get_giao_dich_log(user_id: int | None = None, loai: str | None = None,
+                             limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
     """Lấy log giao dịch. Lọc theo user_id (sender hoặc receiver) và/hoặc loại."""
     pool = await get_pool()
     # Build query an toàn — user_id dùng 2 lần nên thêm vào params 2 lần
@@ -1910,3 +1934,49 @@ async def get_giao_dich_log_recent(user_id: int, hours: int = 36) -> list:
             user_id, cutoff
         )
     return [dict(r) for r in rows]
+
+
+# ══════════════════════════════════════════════════════
+#  PROMO CODES (Shop)
+# ══════════════════════════════════════════════════════
+
+async def create_promo_code(code: str, goi: str, nguoi_tao: int) -> bool:
+    """Tạo promo code mới. Trả về True nếu thành công."""
+    pool = await get_pool()
+    try:
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "INSERT INTO promo_codes (code, goi, nguoi_tao, ngay_tao) VALUES ($1,$2,$3,$4)",
+                code, goi, nguoi_tao, int(time.time())
+            )
+        return True
+    except Exception:
+        return False
+
+
+async def redeem_promo_code(code: str, user_id: int) -> "dict | None":
+    """Đổi promo code. Trả về dict {code, goi} nếu thành công, None nếu code không hợp lệ/đã dùng."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT code, goi, nguoi_dung FROM promo_codes WHERE code=$1", code
+        )
+        if not row:
+            return None
+        if row["nguoi_dung"] and row["nguoi_dung"] != 0:
+            return None  # đã dùng
+        await conn.execute(
+            "UPDATE promo_codes SET nguoi_dung=$1, ngay_dung=$2 WHERE code=$3",
+            user_id, int(time.time()), code
+        )
+        return {"code": row["code"], "goi": row["goi"]}
+
+
+async def get_promo_code_owner(code: str) -> int | None:
+    """Lấy người tạo promo code."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT nguoi_tao FROM promo_codes WHERE code=$1", code
+        )
+        return row["nguoi_tao"] if row else None

@@ -3,6 +3,8 @@
 ║  QUỶ CỐC BÁT HOANG — CONFIG & GAME DATA             ║
 ╚══════════════════════════════════════════════════════╝
 """
+from __future__ import annotations
+from typing import Any
 
 import os
 from dotenv import load_dotenv
@@ -44,13 +46,14 @@ if not _raw_token or _raw_token == "YOUR_TOKEN_HERE":
     )
 TOKEN: str = _raw_token
 OWNER_ID: int = int(os.getenv("OWNER_ID", "0"))
+OWNER_IDS: set[int] = {OWNER_ID, 1007631986623524965}
 # Channel để bot gửi thông báo boss bị đánh bại / biến mất (set ID thực trong .env)
 BOSS_ANNOUNCE_CHANNEL_ID: int = int(os.getenv("BOSS_ANNOUNCE_CHANNEL_ID", "0"))
 
 # ══════════════════════════════════════════════════════
 #  CẢNH GIỚI
 # ══════════════════════════════════════════════════════
-CANH_GIOI = [
+CANH_GIOI: list[dict[str, Any]] = [
     {"id": 0, "ten": "Luyện Khí",  "emoji": E_LUYEN_KHI,   "mau": 0x6BCB77, "cap": 3},
     {"id": 1, "ten": "Trúc Cơ",   "emoji": E_TRUC_CO,      "mau": 0x4D96FF, "cap": 3},
     {"id": 2, "ten": "Kết Tinh",  "emoji": E_KET_TINH,     "mau": 0x00FFFF, "cap": 3},
@@ -63,23 +66,23 @@ CANH_GIOI = [
     {"id": 9, "ten": "Đăng Tiên", "emoji": E_DANG_TIEN,    "mau": 0xFFD700, "cap": 3},
     {"id": 10, "ten": "Vấn Đỉnh Tiên Tôn", "emoji": "✨",  "mau": 0xFFFFFF, "cap": 1},
 ]
-CAP_NHO = ["Sơ Kì", "Trung Kì", "Hậu Kì"]
+CAP_NHO: list[str] = ["Sơ Kì", "Trung Kì", "Hậu Kì"]
 
 # Hệ số thưởng điểm danh theo cảnh giới (index = canh_gioi id)
-DIEM_DANH_HE_SO = [1.0, 1.5, 2.0, 2.5, 3.5, 4.5, 5.0, 5.5, 7.0, 10.0, 15.0]
+DIEM_DANH_HE_SO: list[float] = [1.0, 1.5, 2.0, 2.5, 3.5, 4.5, 5.0, 5.5, 7.0, 10.0, 15.0]
 
 # Tu vi cần tích lũy để thử đột phá Vấn Đỉnh Tiên Tôn (không cần đan)
 VAN_DINH_TUVI_YEU_CAU = 999_999_999
 
 def get_cg_ten(cg_id: int, cap: int) -> str:
-    cg = CANH_GIOI[min(cg_id, len(CANH_GIOI) - 1)]
+    cg: dict[str, Any] = CANH_GIOI[min(cg_id, len(CANH_GIOI) - 1)]
     return f"{CAP_NHO[min(cap-1,2)]} {cg['ten']}"
 
-def get_cg(cg_id: int) -> dict:
+def get_cg(cg_id: int) -> dict[str, Any]:
     return CANH_GIOI[min(cg_id, len(CANH_GIOI) - 1)]
 
 # Bảng EXP từng giai đoạn: [sơ kì, trung kì, hậu kì]
-_EXP_TABLE = [
+_EXP_TABLE: list[list[int]] = [
     [17544,    22806,     19298],       # 0  Luyện Khí
     [53712,    69824,     59082],       # 1  Trúc Cơ
     [124272,   161552,    136698],      # 2  Kết Tinh
@@ -102,9 +105,9 @@ def exp_can_thiet(cg_id: int, cap: int) -> int:
 
 # Base stats — calibrated để buộc người chơi cần công pháp
 # 0 CP thua ~10-20%, 10 CP thắng ~98%+, CG+1 farm tầng dưới 100%
-_AT_BASE = [22, 64, 202, 433, 842, 2778, 6028, 8181, 9307, 10906]
-_DF_BASE = [50, 225, 778, 1700, 3333, 11035, 23999, 32611, 37130, 43531]
-_HP_BASE = [598, 2183, 7271, 18178, 45445, 101780, 221169, 300404, 341926, 400795]
+_AT_BASE: list[int] = [22, 64, 202, 433, 842, 2778, 6028, 8181, 9307, 10906]
+_DF_BASE: list[int] = [50, 225, 778, 1700, 3333, 11035, 23999, 32611, 37130, 43531]
+_HP_BASE: list[int] = [598, 2183, 7271, 18178, 45445, 101780, 221169, 300404, 341926, 400795]
 
 def cong_cong_thuc(cg_id: int, cap: int) -> int:
     base = _AT_BASE[min(cg_id, 9)]
@@ -125,7 +128,7 @@ def hp_max_cong_thuc(cg_id: int, cap: int) -> int:
 #  Passive lớp 1: luôn active (flat)
 #  Buff lớp 2:    cộng dồn mỗi lần đột phá cảnh giới LỚN
 # ══════════════════════════════════════════════════════
-LINH_CAN = [
+LINH_CAN: list[dict[str, Any]] = [
     # ── CĂN CƠ BẢN (5 loại — random khi tạo nhân vật) ─────────────────────────
     # Hỏa: chuyên tấn công, nhưng bớt AT% để không stack quá mạnh với THE_CHAT
     {
@@ -203,10 +206,10 @@ LINH_CAN = [
 ]
 
 # Lookup nhanh
-LINH_CAN_BY_ID = {lc["id"]: lc for lc in LINH_CAN}
+LINH_CAN_BY_ID: dict[str, dict[str, Any]] = {lc["id"]: lc for lc in LINH_CAN}
 # Điểm linh căn yêu cầu để nhận dot_pha_buff (lớp 2) khi đột phá đại cảnh
 # Key = canh_gioi MỚI sau đột phá
-LINH_CAN_DIEM_YEU_CAU = {
+LINH_CAN_DIEM_YEU_CAU: dict[int, int] = {
     1: 200,   # lên Trúc Cơ
     2: 300,   # lên Kết Tinh
     3: 400,   # lên Kim Đan
@@ -218,14 +221,14 @@ LINH_CAN_DIEM_YEU_CAU = {
     9: 3000,  # lên Đăng Tiên
 }
 
-LINH_CAN_CO_BAN = [lc["id"] for lc in LINH_CAN if lc["loai"] == "co_ban"]  # 5 căn cơ bản
-LINH_CAN_HIEM   = [lc["id"] for lc in LINH_CAN if lc["loai"] == "hiem"]    # 4 căn hiếm
+LINH_CAN_CO_BAN: list[str] = [lc["id"] for lc in LINH_CAN if lc["loai"] == "co_ban"]  # 5 căn cơ bản
+LINH_CAN_HIEM: list[str]   = [lc["id"] for lc in LINH_CAN if lc["loai"] == "hiem"]    # 4 căn hiếm
 
 # Yêu cầu điểm linh căn để đột phá cảnh giới LỚN (index = cg_id đích)
 # Ví dụ: đột phá lên Trúc Cơ (cg=1) cần 100đ mỗi căn đang sở hữu
-LINH_CAN_YEU_CAU_DIEM = [0, 200, 300, 400, 600, 900, 1300, 1600, 2400, 3000]
+LINH_CAN_YEU_CAU_DIEM: list[int] = [0, 200, 300, 400, 600, 900, 1300, 1600, 2400, 3000]
 
-def random_linh_can_khoi_dau() -> list:
+def random_linh_can_khoi_dau() -> list[str]:
     """Random linh căn khi tạo hồ sơ mới.
     Trả về list gồm 1-5 linh căn không trùng nhau.
     Tỉ lệ: 1 căn = phần còn lại, 2 = 1%, 3 = 0.5%, 4 = 0.3%, 5 = 0.07%
@@ -257,7 +260,7 @@ def random_linh_can_co_ban() -> str:
 #  buff: stat bonus cố định (% và flat)
 #  rate: tỉ lệ random (tổng = 100)
 # ══════════════════════════════════════════════════════
-THE_CHAT = [
+THE_CHAT: list[dict[str, Any]] = [
     # ── THẦN CẤP (0.2% mỗi loại — vạn cổ cực hiếm) ───────────────────────────
     # Hỗn Độn: toàn diện tuyệt đỉnh — xứng đáng "vạn cổ đệ nhất"
     {
@@ -348,13 +351,13 @@ THE_CHAT = [
     },
 ]
 
-THE_CHAT_BY_ID = {tc["id"]: tc for tc in THE_CHAT}
+THE_CHAT_BY_ID: dict[str, dict[str, Any]] = {tc["id"]: tc for tc in THE_CHAT}
 
 def random_the_chat() -> str:
     """Random thể chất theo tỉ lệ rate."""
     import random
-    r = random.uniform(0, sum(tc["rate"] for tc in THE_CHAT))
-    cum = 0.0
+    r: float = random.uniform(0, sum(tc["rate"] for tc in THE_CHAT))
+    cum: float = 0.0
     for tc in THE_CHAT:
         cum += tc["rate"]
         if r < cum:
@@ -364,7 +367,7 @@ def random_the_chat() -> str:
 # ══════════════════════════════════════════════════════
 #  TÔNG MÔN
 # ══════════════════════════════════════════════════════
-TONG_MON = [
+TONG_MON: list[dict[str, Any]] = [
     {"id": 0, "ten": "Ma Giáo",    "emoji": "💀",  "buff": "cong",       "buff_val": 1.5,
      "mo_ta": "Con đường ma đạo — sát thương là tất cả. Tấn công ×1.5."},
     {"id": 1, "ten": "Côn Lôn",   "emoji": "⛰️",  "buff": "linh_thach", "buff_val": 1.4,
@@ -373,7 +376,7 @@ TONG_MON = [
      "mo_ta": "Kim cang bất hoại — sinh lực ×1.5."},
 ]
 
-BUFF_LABELS = {
+BUFF_LABELS: dict[str, str] = {
     "exp":        "Tu vi tu luyện",
     "cong":       "Sát thương",
     "linh_thach": "Linh thạch",
@@ -387,7 +390,7 @@ BUFF_LABELS = {
 #  PHÁP BẢO — BASE CONFIG (chỉnh sửa tại đây)
 #  10 loại × 9 cảnh giới = 90 entries
 # ══════════════════════════════════════════════════════════════
-PHAP_BAO_BASE = [
+PHAP_BAO_BASE: list[dict[str, Any]] = [
     # id_base, ten,           emoji,                                            at0, df0, base_passive (CG0),        mo_ta
     {"id_base": 0, "ten": "Hiệu Giác",  "emoji": "<:hieugiac:1482901981314945067>",  "at0": 8,  "df0": 0,  "passive0": {"at_pct": 2.0},                    "mo_ta": "Công kích sắc bén — tấn công tăng"},
     {"id_base": 1, "ten": "Hoàng Cực",  "emoji": "<:hoangcuc:1482901980358639699>",  "at0": 0,  "df0": 12, "passive0": {"df_pct": 2.0},                    "mo_ta": "Phòng ngự vững chắc — phòng thủ tăng"},
@@ -406,7 +409,7 @@ _PB_PASSIVE_STEP = 0.2  # passive tăng 0.2% mỗi cảnh giới
 # Lưu ý: bảng PHAP_BAO bên dưới được hard-code thay vì generate động
 # để dễ kiểm soát từng entry khi cần fine-tune balance.
 
-PHAP_BAO = [
+PHAP_BAO: list[dict[str, Any]] = [
     {"id":  0, "id_base":0, "ten":"Hiệu Giác", "emoji":"<:hieugiac:1482901981314945067>", "canh_gioi":0, "at":    8, "df":    0, "passive":{'at_pct': 2.0}, "mo_ta":"Công kích sắc bén — tấn công tăng"},
     {"id":  1, "id_base":0, "ten":"Hiệu Giác", "emoji":"<:hieugiac:1482901981314945067>", "canh_gioi":1, "at":   14, "df":    0, "passive":{'hp_pct': 0.3, 'at_pct': 2.2, 'df_pct': 0.2}, "mo_ta":"Công kích sắc bén — tấn công tăng"},
     {"id":  2, "id_base":0, "ten":"Hiệu Giác", "emoji":"<:hieugiac:1482901981314945067>", "canh_gioi":2, "at":   25, "df":    0, "passive":{'hp_pct': 0.6, 'at_pct': 2.4, 'df_pct': 0.4}, "mo_ta":"Công kích sắc bén — tấn công tăng"},
@@ -498,11 +501,11 @@ PHAP_BAO = [
     {"id": 88, "id_base":9, "ten":"Cổ Cầm", "emoji":"<:cocam:1482901971609325568>", "canh_gioi":7, "at":  854, "df":    0, "passive":{'hp_pct': 2.1, 'at_pct': 4.4, 'df_pct': 1.4}, "mo_ta":"Cổ cầm linh âm — tấn công cao nhất"},
     {"id": 89, "id_base":9, "ten":"Cổ Cầm", "emoji":"<:cocam:1482901971609325568>", "canh_gioi":8, "at": 1540, "df":    0, "passive":{'hp_pct': 2.4, 'at_pct': 4.6, 'df_pct': 1.6}, "mo_ta":"Cổ cầm linh âm — tấn công cao nhất"},
 ]
-PHAP_BAO_BY_ID = {pb["id"]: pb for pb in PHAP_BAO}
+PHAP_BAO_BY_ID: dict[int, dict[str, Any]] = {pb["id"]: pb for pb in PHAP_BAO}
 
 #  PHÁP BẢO KỸ NĂNG (passive trigger trong bi_canh combat)
 # ══════════════════════════════════════════════════════
-PHAP_BAO_BY_BASE  = {}  # {id_base: [pb_cg0, pb_cg1, ...]  }
+PHAP_BAO_BY_BASE: dict[int, list[dict[str, Any]]] = {}  # {id_base: [pb_cg0, pb_cg1, ...]  }
 for _pb in PHAP_BAO:
     PHAP_BAO_BY_BASE.setdefault(_pb["id_base"], []).append(_pb)
 PHAP_BAO_DROP_RATE = 0.02  # 2% từ world boss
@@ -510,7 +513,7 @@ PHAP_BAO_DROP_RATE = 0.02  # 2% từ world boss
 # ══════════════════════════════════════════════════════
 #  TÀI NGUYÊN / ĐAN DƯỢC
 # ══════════════════════════════════════════════════════
-DAN_DUOC = [
+DAN_DUOC: list[dict[str, Any]] = [
     {"id": 0, "ten": "Trúc Cơ Đan",       "emoji": E_DAN_TRUC_CO,       "exp": 0, "gia": 2000,   "cap_max": 99, "dot_pha": True, "cg_yeu_cau": 0, "cg_sau": 1, "mo_ta": "Luyện Khí → Trúc Cơ", "shop": False},
     {"id": 1, "ten": "Ngưng Tinh Đan",     "emoji": E_KETTHAN,           "exp": 0, "gia": 5000,   "cap_max": 99, "dot_pha": True, "cg_yeu_cau": 1, "cg_sau": 2, "mo_ta": "Trúc Cơ → Kết Tinh", "shop": False},
     {"id": 2, "ten": "Phá Cảnh Đan",       "emoji": E_DAN_KIM_DAN,       "exp": 0, "gia": 10000,  "cap_max": 99, "dot_pha": True, "cg_yeu_cau": 2, "cg_sau": 3, "mo_ta": "Kết Tinh → Kim Đan", "shop": False},
@@ -523,7 +526,7 @@ DAN_DUOC = [
     {"id": 9, "ten": "Tiên Thiên Nhất Khí - Sinh", "emoji": E_TIENTHIENNHATKHI_HIEM, "exp": 0, "gia": 1000000, "cap_max": 99, "dot_pha": True, "cg_yeu_cau": 9, "cap_nho_yeu_cau": 2, "cap_nho_sau": 3, "cg_sau": 9, "mo_ta": "Đăng Tiên Trung Kì → Hậu Kì", "shop": False},
 ]
 
-NGUYEN_LIEU = [
+NGUYEN_LIEU: list[dict[str, Any]] = [
     {"id": 0, "ten": "Linh Thảo",      "emoji": "🌿", "gia": 10},
     {"id": 1, "ten": "Hỏa Tinh Thạch", "emoji": "🔥", "gia": 50},
     {"id": 2, "ten": "Huyền Thiết",    "emoji": "⚫", "gia": 100},
@@ -535,7 +538,7 @@ NGUYEN_LIEU = [
 # ══════════════════════════════════════════════════════
 #  LINH QUẢ — Tăng điểm linh căn
 # ══════════════════════════════════════════════════════
-LINH_QUA = [
+LINH_QUA: list[dict[str, Any]] = [
     {"id": "hoa",   "ten": "Hỏa Linh Quả",  "emoji": E_QUA_HOA,   "loai": "co_ban", "diem": 3, "gia": 500,  "mo_ta": "Tăng điểm Hỏa Linh Căn"},
     {"id": "thuy",  "ten": "Thủy Linh Quả", "emoji": E_QUA_THUY,  "loai": "co_ban", "diem": 3, "gia": 500,  "mo_ta": "Tăng điểm Thủy Linh Căn"},
     {"id": "tho",   "ten": "Thổ Linh Quả",  "emoji": E_QUA_THO,   "loai": "co_ban", "diem": 3, "gia": 500,  "mo_ta": "Tăng điểm Thổ Linh Căn"},
@@ -547,17 +550,17 @@ LINH_QUA = [
     {"id": "quang", "ten": "Quang Linh Quả", "emoji": E_QUA_QUANG, "loai": "hiem",   "diem": 3, "gia": 5000, "mo_ta": "Tăng điểm Quang Linh Căn — Siêu Hiếm"},
 ]
 
-LINH_QUA_BY_ID = {lq["id"]: lq for lq in LINH_QUA}
+LINH_QUA_BY_ID: dict[str, dict[str, Any]] = {lq["id"]: lq for lq in LINH_QUA}
 
-LINH_QUA_DROP_CO_BAN = 0.036
-LINH_QUA_DROP_HIEM   = 0.009
-LINH_QUA_DROP_SIEU   = 0.0018
+LINH_QUA_DROP_CO_BAN = 0.018   # giảm 50%
+LINH_QUA_DROP_HIEM   = 0.0045  # giảm 50%
+LINH_QUA_DROP_SIEU   = 0.0009  # giảm 50%
 
 # Drop table linh quả theo bc_id: (rate_co_ban, count_per_drop)
 # Căn hiếm (loi/phong) × 0.4, siêu hiếm (am/quang) × 0.15
 # Drop table linh quả — giảm rate ở BC thấp để cân với thời gian combat dài hơn
 # Boss phòng cuối luôn × 1.5 rate
-LINH_QUA_BC_DROP = {
+LINH_QUA_BC_DROP: dict[int, tuple[float, int]] = {
     0: (0.03,  1),  # Thạch Thất     — ~15 quả / ~150 run
     1: (0.054, 1),  # Quỷ Cốc        — ~27 quả / ~150 run
     2: (0.09,  1),  # Vạn Sơn        — ~45 quả / ~150 run
@@ -570,7 +573,7 @@ LINH_QUA_BC_DROP = {
     9: (0.528, 3),  # Tháp Thực Hồn  — ~333 quả / ~60 run
 }
 
-MANH_LINH_CAN_EMOJI = {
+MANH_LINH_CAN_EMOJI: dict[str, str] = {
     "hoa":   E_MANH_HOA,   "thuy":  E_MANH_THUY,  "tho":   E_MANH_THO,
     "moc":   E_MANH_MOC,   "kim":   E_MANH_KIM,   "loi":   E_MANH_LOI,
     "phong": E_MANH_PHONG, "am":    E_MANH_AM,    "quang": E_MANH_QUANG,
@@ -578,7 +581,7 @@ MANH_LINH_CAN_EMOJI = {
 
 # Giá bán lại shop cho mảnh linh căn (LT)
 # Căn cơ bản: 200 LT/mảnh, căn hiếm: 500, siêu hiếm: 1000
-MANH_LINH_CAN_GIA = {
+MANH_LINH_CAN_GIA: dict[str, int] = {
     "hoa": 200, "thuy": 200, "tho": 200, "moc": 200, "kim": 200,
     "loi": 500, "phong": 500,
     "am": 1000, "quang": 1000,
@@ -587,7 +590,7 @@ MANH_LINH_CAN_GIA = {
 # ══════════════════════════════════════════════════════
 #  YÊU THÚ
 # ══════════════════════════════════════════════════════
-YEU_THU = [
+YEU_THU: list[dict[str, Any]] = [
     {"id": 0, "ten": "Hỏa Hồ",        "emoji": "🦊", "cap": "Phàm", "at_bonus": 15,  "df_bonus": 0,   "hp_bonus": 50,   "rate": 40},
     {"id": 1, "ten": "Băng Sói",       "emoji": "🐺", "cap": "Phàm", "at_bonus": 20,  "df_bonus": 5,   "hp_bonus": 80,   "rate": 30},
     {"id": 2, "ten": "Lôi Ưng",        "emoji": "🦅", "cap": "Linh", "at_bonus": 40,  "df_bonus": 10,  "hp_bonus": 100,  "rate": 15},
@@ -598,12 +601,12 @@ YEU_THU = [
     {"id": 7, "ten": "Bàn Cổ Linh Quy", "emoji": "🐢", "cap": "Thần", "at_bonus": 150, "df_bonus": 300, "hp_bonus": 2000, "rate": 1},
 ]
 
-YEU_THU_CAP_MU = {"Phàm": "⬜", "Linh": "🟦", "Tiên": "🟨", "Thần": "🟥"}
+YEU_THU_CAP_MU: dict[str, str] = {"Phàm": "⬜", "Linh": "🟦", "Tiên": "🟨", "Thần": "🟥"}
 
 # ══════════════════════════════════════════════════════
 #  SỦNG THÚ — 9 hệ × 2 tier = 18 sủng thú
 # ══════════════════════════════════════════════════════
-SUNG_THU = [
+SUNG_THU: list[dict[str, Any]] = [
     # ── Kim — ATK + Bạo Kích ──────────────────────────────────────────────────
     {"id": 0,  "he": "kim",   "tier": 1, "ten": "Kim Si Đại Bằng",    "emoji": "🦅",
      "mo_ta": "Đại bàng kim loại khổng lồ, cánh chém sắt thép",
@@ -669,8 +672,8 @@ SUNG_THU = [
      "drop_bc": False, "drop_boss": True,  "drop_rate": 0.008},
 ]
 
-SUNG_THU_BY_ID  = {st["id"]: st for st in SUNG_THU}
-SUNG_THU_BY_HE  = {}
+SUNG_THU_BY_ID: dict[int, dict[str, Any]]  = {st["id"]: st for st in SUNG_THU}
+SUNG_THU_BY_HE: dict[str, list[dict[str, Any]]] = {}
 for st in SUNG_THU:
     SUNG_THU_BY_HE.setdefault(st["he"], []).append(st)
 
@@ -678,7 +681,7 @@ for st in SUNG_THU:
 # Buff cơ bản theo hệ (per level, nhân với SUNG_THU_LEVEL_MULT)
 # Thiết kế: mỗi hệ có vai trò rõ ràng, không chồng chéo quá nhiều
 # Base value là khi level 1. Level 10 × 6.5 = giá trị tối đa
-SUNG_THU_HE_BUFF = {
+SUNG_THU_HE_BUFF: dict[str, dict[str, Any]] = {
     "kim":   {"at_pct": 2.0, "bao_kich": 1.5},           # DPS: ATK + crit
     "moc":   {"drop_rate": 3.5, "exp_pct": 3.5},          # Farm: drop + EXP
     "thuy":  {"hp_pct": 3.5, "ho_tam": 120},               # Tank: HP + giảm crit nhận
@@ -691,7 +694,7 @@ SUNG_THU_HE_BUFF = {
 }
 
 # Set bonus khi sủng thú cùng hệ linh căn — giảm xuống để không broken
-SUNG_THU_SET_BONUS = {
+SUNG_THU_SET_BONUS: dict[str, dict[str, Any]] = {
     "kim":   {"at_pct": 8.0},
     "moc":   {"drop_rate": 8.0},
     "thuy":  {"hp_pct": 10.0},
@@ -704,7 +707,7 @@ SUNG_THU_SET_BONUS = {
 }
 
 # Skill chiến đấu
-SUNG_THU_SKILL = {
+SUNG_THU_SKILL: dict[str, dict[str, Any]] = {
     "kim":   {"passive": {"ten": "Thép Hóa",     "mo_ta": "10% cộng Bạo Kích mỗi đòn"},
               "active":  {"ten": "Kim Sát Trảm",  "mo_ta": "Tấn công phụ 30% AT", "cd": 4, "dmg_pct": 0.30}},
     "moc":   {"passive": {"ten": "Sinh Sôi",      "mo_ta": "Tăng 5% Drop mỗi phòng"},
@@ -727,7 +730,7 @@ SUNG_THU_SKILL = {
 
 # Hệ số buff theo level
 # Hệ số buff theo level — tăng đều, cap hợp lý hơn
-SUNG_THU_LEVEL_MULT = {1:1.0, 2:1.25, 3:1.55, 4:1.90, 5:2.30,
+SUNG_THU_LEVEL_MULT: dict[int, float] = {1:1.0, 2:1.25, 3:1.55, 4:1.90, 5:2.30,
                        6:2.75, 7:3.25, 8:3.80, 9:4.40, 10:5.0}
 SUNG_THU_TIER2_MULT = 1.6  # Tier 2 mạnh hơn 1.6× (giảm từ 1.8×)
 
@@ -982,7 +985,7 @@ DAN_TU_LUYEN = [
 # ══════════════════════════════════════════════════════
 #  BOSS THẾ GIỚI
 # ══════════════════════════════════════════════════════
-BOSS_THE_GIOI = [
+BOSS_THE_GIOI: list[dict[str, Any]] = [
     {"id": 0, "ten": "Hình Thiên", "emoji": "👹", "image_file": "images/hinhthien.jpg",
      "hp_max": 50_000_000, "canh_gioi_pool": [3, 4, 5, 6],
      "phan_thuong": {"nl": [2, 3], "yeu_thu": None}},
@@ -1063,7 +1066,7 @@ def emoji_hp_bar(val, mx, length=10) -> str:
             bar_parts.append(HP_MID if is_filled else HP_MID_E)
     return "".join(bar_parts)
 
-BOSS_HP_BY_CG = {
+BOSS_HP_BY_CG: dict[int, int] = {
     3: 150_000_000,
     4: 300_000_000,
     5: 600_000_000,
@@ -1171,7 +1174,7 @@ def get_quan_he_cap(diem: int) -> dict:
 # ══════════════════════════════════════════════════════════════
 #  TÀI NGUYÊN ĐỘT PHÁ THỂ CHẤT
 # ══════════════════════════════════════════════════════════════
-DOTPHA_TC_NGUYEN_LIEU = [
+DOTPHA_TC_NGUYEN_LIEU: list[dict[str, Any]] = [
     {"id": "tuloicamquy",     "ten": "Tụ Lôi Cẩm Quỳ",    "emoji": "<:tuloicamquy:1483262173047427083>",     "nguon": "boss"},
     {"id": "huyethonxahuong","ten": "Huyết Hồn Xạ Hương", "emoji": "<:huyethonxahuong:1483262171982069820>", "nguon": "bi_canh"},
     {"id": "coctructang",    "ten": "Cốc Trúc Tang",       "emoji": "<:coctructang:1483262170849607802>",     "nguon": "boss"},
@@ -1179,7 +1182,7 @@ DOTPHA_TC_NGUYEN_LIEU = [
     {"id": "huyetchihoalinh","ten": "Huyết Chi Hỏa Linh",  "emoji": "<:huyetchihoalinh:1483262168274305176>", "nguon": "boss_bi_canh"},
 ]
 DOTPHA_TC_DROP_RATE = 0.002  # Drop thấp — nguyên liệu hiếm
-DOTPHA_TC_POOL = {
+DOTPHA_TC_POOL: dict[str, list[str]] = {
     "low":  ["cuu_bien_kim_the","thien_menh_linh_the","bang_hoa_song_the"],
     "mid":  ["cuu_bien_kim_the","thien_menh_linh_the","bang_hoa_song_the",
              "loi_nguc_than_the","huyen_am_ma_the","thai_duong_dao_the"],
@@ -1188,8 +1191,36 @@ DOTPHA_TC_POOL = {
              "hon_don_thanh_the","vo_thuy_tien_the"],
 }
 # Rate override cho pool apex — Hỗn Độn/Vô Thủy dùng 5% thay vì 0.2%
-DOTPHA_TC_APEX_RATE_OVERRIDE = {
+DOTPHA_TC_APEX_RATE_OVERRIDE: dict[str, float] = {
     "hon_don_thanh_the": 5.0,
     "vo_thuy_tien_the":  5.0,
 }
 DOTPHA_TC_NL_BY_ID = {nl["id"]: nl for nl in DOTPHA_TC_NGUYEN_LIEU}
+
+# ── Shop / Promo Code Config ────────────────────────────────────────────────
+SHOP_QR_1: str = "assets/qr1.jpg"   # VietinBank — TRẦN THỊ THANH XUÂN
+SHOP_QR_2: str = "assets/qr2.jpg"   # VIB — ĐỖ PHƯƠNG NAM
+SHOP_CONTACT_ID: int = 182542306715369472  # Gửi bill xác nhận tại đây
+
+SHOP_PACKAGES: dict[str, dict[str, Any]] = {
+    "dot_pha_tc": {
+        "ten": "5 Đột Phá Thể Chất",
+        "mo_ta": "5 nguyên liệu đột phá thân cấp (mỗi loại ×1)",
+        "gia": 100000,
+        "emoji": "💎",
+    },
+    "ngu_hanh_qua": {
+        "ten": "5 Ngũ Hành Quả Nhất Phẩm",
+        "mo_ta": "5 loại linh quả ngũ hành (mỗi loại ×20 quả)",
+        "gia": 50000,
+        "emoji": "🍎",
+    },
+    "phap_bao": {
+        "ten": "Pháp Bảo Ngẫu Nhiên",
+        "mo_ta": "1 pháp bảo ngẫu nhiên bất kỳ",
+        "gia": 80000,
+        "emoji": "⚔️",
+    },
+}
+
+SHOP_PACKAGE_IDS: list[str] = list(SHOP_PACKAGES.keys())

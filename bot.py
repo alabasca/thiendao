@@ -70,6 +70,7 @@ COGS = [
     "cogs.admin_log",   # /adminlog — xuất log giao dịch Excel (owner only)
     "cogs.world_chat",  # /worldchat — kênh thế giới liên server
     "cogs.vote",        # /vote — biểu quyết toàn server (owner only)
+    "cogs.shop",        # /shop, /gencode, /redeem — promo code system
 ]
 
 intents = discord.Intents.default()
@@ -179,8 +180,8 @@ async def on_ready():
 
 @bot.tree.command(name="sync", description="[Owner] Force sync slash commands")
 async def sync_cmd(inter: discord.Interaction):
-    from utils.config import OWNER_ID
-    if inter.user.id != OWNER_ID:
+    from utils.config import OWNER_IDS
+    if inter.user.id not in OWNER_IDS:
         return await inter.response.send_message("❌ Chỉ owner mới dùng được!", ephemeral=True)
     await inter.response.defer(ephemeral=True)
     try:

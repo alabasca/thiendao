@@ -1,4 +1,5 @@
 """Shared Embed Builders"""
+from typing import Any
 import discord
 
 def e_loi(tieu_de: str, noi_dung: str) -> discord.Embed:
@@ -13,11 +14,12 @@ def e_warn(tieu_de: str, noi_dung: str) -> discord.Embed:
 def e_info(tieu_de: str, noi_dung: str = "") -> discord.Embed:
     return discord.Embed(title=tieu_de, description=noi_dung, color=0x5865F2)
 
-def owner_only_check(owner_id: int):
-    """App command check - chỉ owner"""
+def owner_only_check(owner_ids: int | set[int]):
+    """App command check - chỉ owner(s)"""
     import discord.app_commands as ac
+    ids = {owner_ids} if isinstance(owner_ids, int) else owner_ids
     async def predicate(interaction: discord.Interaction) -> bool:
-        if interaction.user.id != owner_id:
+        if interaction.user.id not in ids:
             await interaction.response.send_message(
                 embed=e_loi("Không Có Quyền", "Lệnh này chỉ dành cho **Thiên Đế**!"),
                 ephemeral=True
@@ -30,7 +32,7 @@ import logging as _logging
 _log_safe = _logging.getLogger("safe_followup")
 
 
-async def safe_followup(inter, *args, **kwargs):
+async def safe_followup(inter: discord.Interaction, *args: Any, **kwargs: Any) -> discord.Message | None:
     """followup.send an toàn — bỏ qua nếu interaction token expire (404/10015/10062).
     Trả về discord.Message nếu thành công, None nếu thất bại.
     """

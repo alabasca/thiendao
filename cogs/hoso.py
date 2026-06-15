@@ -38,7 +38,7 @@ from utils.config import (
     CD_TU_LUYEN, CD_DOT_PHA, CD_KHAI_HOANG,
     get_cg, get_cg_ten, bar, fmt, fmt_cd,
     exp_can_thiet, hp_max_cong_thuc, cong_cong_thuc, thu_cong_thuc,
-    random_linh_can_co_ban, OWNER_ID,
+    random_linh_can_co_ban, OWNER_IDS,
     LINH_CAN_BY_ID, LINH_CAN_DIEM_YEU_CAU,
     QUAN_HE_LOAI, get_quan_he_cap,
     BOSS_ANNOUNCE_CHANNEL_ID,
@@ -1938,7 +1938,7 @@ class HoSoCog(commands.Cog, name="Hồ Sơ"):
             return await inter.response.send_message("❌ Chỉ dùng trong server!", ephemeral=True)
         if not (inter.user.guild_permissions.administrator
                 or inter.user.id == inter.guild.owner_id
-                or inter.user.id == OWNER_ID):
+                or inter.user.id in OWNER_IDS):
             return await inter.response.send_message("❌ Cần quyền Administrator!", ephemeral=True)
         await inter.response.defer(ephemeral=True)
         try:

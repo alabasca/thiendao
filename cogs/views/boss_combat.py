@@ -13,6 +13,7 @@ Flow:
 Chỉ số boss = boss bí cảnh cùng cảnh giới × 15 (trừ HP, giữ nguyên từ BOSS_HP_BY_CG).
 """
 from __future__ import annotations
+from typing import Any
 
 import asyncio
 import random
@@ -91,7 +92,7 @@ def _get_boss_stat(canh_gioi: int) -> dict:
 # ══════════════════════════════════════════════════════════════
 #  TÍNH TOÁN 10 HIỆP AUTO COMBAT (synchronous, chạy trong executor)
 # ══════════════════════════════════════════════════════════════
-def _compute_boss_combat(ts: dict, boss_stat: dict, hp_boss_max: int, hp_boss_hien: int) -> list[tuple]:
+def _compute_boss_combat(ts: dict[str, Any], boss_stat: dict, hp_boss_max: int, hp_boss_hien: int) -> list[tuple]:
     """
     Tính trước toàn bộ log 10 hiệp.
     Trả về list[(hiep, dmg_player, crit, skill_name, hp_boss_sau, hp_player_sau, log_line)]
@@ -218,7 +219,7 @@ def _compute_boss_combat(ts: dict, boss_stat: dict, hp_boss_max: int, hp_boss_hi
 # ══════════════════════════════════════════════════════════════
 def _embed_boss_combat(
     user: discord.User,
-    ts: dict,
+    ts: dict[str, Any],
     logs: list,
     n_show: int,
     boss_cfg: dict,

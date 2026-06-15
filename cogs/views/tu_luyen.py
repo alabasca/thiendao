@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import Any
 
 from cogs.views._common import *
 from utils.embeds import e_loi, e_ok, e_warn, e_info
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
     from cogs.hoso import HoSoView
 
 class DungDanView(discord.ui.View):
-    def __init__(self, parent: HoSoView, ts: dict, opts: list, actor_id: int = None):
+    def __init__(self, parent: HoSoView, ts: dict[str, Any], opts: list, actor_id: int = None):
         super().__init__(timeout=60)
         self.parent   = parent
         self.ts       = ts
@@ -79,7 +80,7 @@ class DungDotPhaView(discord.ui.View):
     """Dropdown dùng đan tu luyện (tiểu cảnh từ bí cảnh drop).
     Đột phá đại cảnh chỉ được thực hiện qua nút ⚡ Đột Phá trong tab Tu Luyện.
     """
-    def __init__(self, parent: HoSoView, ts: dict, opts: list, actor_id: int = None):
+    def __init__(self, parent: HoSoView, ts: dict[str, Any], opts: list, actor_id: int = None):
         super().__init__(timeout=60)
         self.parent   = parent
         self.ts       = ts
@@ -188,7 +189,7 @@ class DungDotPhaView(discord.ui.View):
 
 
 class TuLuyenView(discord.ui.View):
-    def __init__(self, parent: HoSoView, user: discord.User, ts: dict, actor_id: int = None):
+    def __init__(self, parent: HoSoView, user: discord.User, ts: dict[str, Any], actor_id: int = None):
         super().__init__(timeout=120)
         self.parent   = parent
         self.user     = user

@@ -3,6 +3,8 @@ utils/bot_emojis.py
 Tất cả emoji của bot — import từ đây thay vì hardcode rải rác.
 """
 
+from __future__ import annotations
+
 # ── Chỉ số chiến đấu ──────────────────────────────────────────
 E_SINH_LUC  = "<:SinhLuc:1481643552545968331>"
 E_LINH_LUC  = "<:LinhLuc:1481643549383590052>"

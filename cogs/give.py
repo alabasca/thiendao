@@ -3,6 +3,8 @@ COG: Admin Give
 Commands: /give linhthach, /give tuvi, /give phapbao, /give linhcan, /give hp, /give dan, /give reset, /give all
 Chỉ OWNER_ID mới dùng được
 """
+from __future__ import annotations
+
 import logging
 log = logging.getLogger("give")
 import discord

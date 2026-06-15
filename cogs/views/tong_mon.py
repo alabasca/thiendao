@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Any
+
 from cogs.views._common import *
 import re as _re
 import logging
@@ -10,7 +13,7 @@ if TYPE_CHECKING:
     from cogs.hoso import HoSoView
 
 class TongMonView(discord.ui.View):
-    def __init__(self, parent: "HoSoView", ts: dict, actor_id: int = None):
+    def __init__(self, parent: "HoSoView", ts: dict[str, Any], actor_id: int = None):
         super().__init__(timeout=120)
         self.parent   = parent
         self.ts       = ts
@@ -78,7 +81,7 @@ class TongMonView(discord.ui.View):
 
 class _ConfirmRoiTong(discord.ui.View):
     """View xác nhận rời tông — hiện sau khi bấm tông mới."""
-    def __init__(self, parent, ts: dict, tm_id: int, phi: int, actor_id: int):
+    def __init__(self, parent, ts: dict[str, Any], tm_id: int, phi: int, actor_id: int):
         super().__init__(timeout=60)
         self.parent   = parent
         self.ts       = ts
@@ -116,7 +119,7 @@ class _ConfirmRoiTong(discord.ui.View):
         pass
 
 
-async def _join_tong(inter: discord.Interaction, parent, ts: dict, tm_id: int, phi: int, actor_id: int):
+async def _join_tong(inter: discord.Interaction, parent, ts: dict[str, Any], tm_id: int, phi: int, actor_id: int):
     """Thực hiện gia nhập tông — dùng chung cho lần đầu và sau confirm."""
     tm = TONG_MON[tm_id]
     # Dùng add_linh_thach(-phi) để atomic, tránh race condition ghi đè LT

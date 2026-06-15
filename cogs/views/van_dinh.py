@@ -10,6 +10,7 @@ Kết quả:
   - Gửi thông báo toàn server qua world chat
 """
 from __future__ import annotations
+from typing import Any
 
 import random
 import logging
@@ -67,7 +68,7 @@ async def _broadcast_van_dinh(bot, noi_dung: str) -> None:
 #  EMBEDS
 # ══════════════════════════════════════════════════════
 
-def _embed_chuan_bi(ts: dict) -> discord.Embed:
+def _embed_chuan_bi(ts: dict[str, Any]) -> discord.Embed:
     dao_hieu  = ts.get("dao_hieu", "Vô Danh")
     tong_tv   = ts.get("exp", 0)  # tu vi hiện có của Đăng Tiên Hậu Kỳ
     so_lan    = ts.get("so_lan_trung_sinh", 0)
@@ -119,7 +120,7 @@ def _embed_chuan_bi(ts: dict) -> discord.Embed:
 class VanDinhView(discord.ui.View):
     """View đột phá Vấn Đỉnh Tiên Tôn."""
 
-    def __init__(self, parent, ts: dict, actor_id: int = None):
+    def __init__(self, parent, ts: dict[str, Any], actor_id: int = None):
         super().__init__(timeout=120)
         self.parent   = parent
         self.ts       = ts

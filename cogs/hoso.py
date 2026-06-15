@@ -3,8 +3,12 @@
 ║  QCBH TU TIÊN BOT  —  /hoso  (refactored)               ║
 ╚══════════════════════════════════════════════════════════╝
 """
+from __future__ import annotations
+from typing import Any
+
 import discord
-from utils.embeds import e_loi, e_ok, e_warn, e_info
+from utils.embeds import e_loi, e_ok, e_warn
+from cogs.bxh import _build_bxh_embed
 import asyncio
 import logging
 import time
@@ -12,16 +16,16 @@ from discord import app_commands
 from discord.ext import commands, tasks
 import discord.ext.tasks
 from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass, field
 
 log = logging.getLogger("hoso")
 
 # ── Utils & Helpers ────────────────────────────────────────
 from cogs.thuoc_tinh import _build_embed_thuoc_tinh
+from cogs.views._session import BiCanhSession, _bc_sessions, _cleanup_stale_sessions
 from cogs.hoso_utils import (
-    BiCanhSession, _bc_sessions, _run_task,
+    _run_task,
     _back_to_hoso, _parse_emoji, _calc_stats, _calc_full_stats,
-    _gen_rooms, _apply_event, _cleanup_stale_sessions,
+    _gen_rooms, _apply_event,
     _send_hoso_embed, _embed_hoso, _embed_tu_luyen, _embed_hanh_dong,
     _build_inventory, _embed_kho_trang,
     _boss_current_window, _boss_is_active, _embed_the_gioi,
@@ -97,133 +101,6 @@ from utils.embeds import safe_followup
 # ══════════════════════════════════════════════════════════════
 #  MAIN HOSO VIEW
 # ══════════════════════════════════════════════════════════════
-# ══════════════════════════════════════════════════════════
-#  BẢNG XẾP HẠNG — BXH View & Builder
-# ══════════════════════════════════════════════════════════
-
-_BXH_MEDALS = ["🥇","🥈","🥉","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟"]
-
-async def _build_bxh_embed(loai: str) -> tuple:
-    """Tạo embed BXH cho loại cho trước. Trả về (embed, BXHView)."""
-    if loai == "canh_gioi":
-        data  = await get_bang_xep_hang(top=10)
-        title = "🏆 Bảng Xếp Hạng — Cảnh Giới"
-        color = 0xFFD700
-        lines = []
-        for i, t in enumerate(data):
-            cg = get_cg(t["canh_gioi"])
-            lines.append(
-                f"{_BXH_MEDALS[i]} {cg['emoji']} **{t['dao_hieu']}**  "
-                f"{get_cg_ten(t['canh_gioi'], t['cap_nho'])}  "
-                f"{E_TT_LINH_THACH}{fmt(t['linh_thach'])}"
-            )
-
-    elif loai == "tong_tu_vi":
-        data  = await get_bxh_tong_tu_vi(top=10)
-        title = "📿 Bảng Xếp Hạng — Tổng Tu Vi"
-        color = 0x9B59B6
-        lines = []
-        for i, t in enumerate(data):
-            cg = get_cg(t["canh_gioi"])
-            lines.append(
-                f"{_BXH_MEDALS[i]} {cg['emoji']} **{t['dao_hieu']}**  "
-                f"{get_cg_ten(t['canh_gioi'], t['cap_nho'])}  "
-                f"{E_TU_VI}{fmt(t['tong_tu_vi'])}"
-            )
-
-    elif loai == "linh_thach":
-        data  = await get_bxh_linh_thach(top=10)
-        title = "💎 Bảng Xếp Hạng — Linh Thạch"
-        color = 0x1ABC9C
-        lines = []
-        for i, t in enumerate(data):
-            cg = get_cg(t["canh_gioi"])
-            lines.append(
-                f"{_BXH_MEDALS[i]} {cg['emoji']} **{t['dao_hieu']}**  "
-                f"{get_cg_ten(t['canh_gioi'], t['cap_nho'])}  "
-                f"{E_TT_LINH_THACH}{fmt(t['linh_thach'])}"
-            )
-
-    elif loai == "linh_can":
-        data  = await get_bxh_linh_can(top=10)
-        title = "🌿 Bảng Xếp Hạng — Tổng Linh Căn"
-        color = 0x2ECC71
-        lines = []
-        for i, t in enumerate(data):
-            cg = get_cg(t["canh_gioi"])
-            lines.append(
-                f"{_BXH_MEDALS[i]} {cg['emoji']} **{t['dao_hieu']}**  "
-                f"{get_cg_ten(t['canh_gioi'], t['cap_nho'])}  "
-                f"🌿{t['tong_linh_can']} căn"
-            )
-
-    elif loai == "chien_luc":
-        data  = await get_bxh_chien_luc(top=10)
-        title = "🔥 Bảng Xếp Hạng — Chiến Lực"
-        color = 0xE74C3C
-        lines = []
-        for i, t in enumerate(data):
-            cg = get_cg(t["canh_gioi"])
-            lines.append(
-                f"{_BXH_MEDALS[i]} {cg['emoji']} **{t['dao_hieu']}**  "
-                f"{get_cg_ten(t['canh_gioi'], t['cap_nho'])}  "
-                f"🔥{fmt(t['chien_luc'])}"
-            )
-
-    else:
-        lines = []
-        title = "🏆 Bảng Xếp Hạng"
-        color = 0xFFD700
-
-    embed = discord.Embed(
-        title=title,
-        description="\n".join(lines) if lines else "*(chưa có dữ liệu)*",
-        color=color,
-    )
-    embed.set_footer(text="Top 10 toàn server")
-    view = BXHView(active=loai)
-    return embed, view
-
-
-class BXHView(discord.ui.View):
-    """View hiển thị 3 nút chuyển tab BXH."""
-
-    def __init__(self, active: str = "canh_gioi"):
-        super().__init__(timeout=120)
-        self._active = active
-        self._add_buttons()
-
-    def _add_buttons(self):
-        tabs = [
-            ("canh_gioi",  "🏆 Cảnh Giới",  discord.ButtonStyle.primary),
-            ("chien_luc",  "🔥 Chiến Lực",  discord.ButtonStyle.secondary),
-            ("tong_tu_vi", "📿 Tổng Tu Vi",  discord.ButtonStyle.secondary),
-            ("linh_thach", "💎 Linh Thạch",  discord.ButtonStyle.secondary),
-            ("linh_can",   "🌿 Linh Căn",    discord.ButtonStyle.secondary),
-        ]
-        for loai, label, style in tabs:
-            # Nút đang active thì disabled để user biết đang ở tab nào
-            btn = discord.ui.Button(
-                label=label,
-                style=discord.ButtonStyle.success if loai == self._active else style,
-                disabled=(loai == self._active),
-                custom_id=f"bxh_{loai}",
-            )
-            btn.callback = self._make_cb(loai)
-            self.add_item(btn)
-
-    def _make_cb(self, loai: str):
-        async def _cb(inter: discord.Interaction):
-            try:
-                await inter.response.defer(ephemeral=True)
-            except discord.NotFound:
-                return
-            try:
-                embed, view = await _build_bxh_embed(loai)
-                await safe_followup(inter, embed=embed, view=view, ephemeral=True)
-            except Exception as e:
-                await safe_followup(inter, f"❌ Lỗi: {e}", ephemeral=True)
-        return _cb
 
 
 class HoSoView(discord.ui.View):
@@ -231,7 +108,7 @@ class HoSoView(discord.ui.View):
     Row 0 : tab buttons  [📋 Hồ Sơ] [⚔️ Hành Động] [🎒 Kho Đồ] [🌍 Thế Giới]
     Row 1-2: sub-buttons thay đổi theo tab
     """
-    def __init__(self, ts: dict, user: discord.User, owner_id: int, viewer_id: int = None):
+    def __init__(self, ts: dict[str, Any], user: discord.User, owner_id: int, viewer_id: int = None):
         super().__init__(timeout=300)  # 5 phút — tránh memory leak
         self.ts        = ts
         self.user      = user

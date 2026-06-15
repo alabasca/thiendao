@@ -5,6 +5,9 @@
 ╚══════════════════════════════════════════════════════╝
 """
 
+from __future__ import annotations
+from typing import Any
+
 import discord
 
 from utils.config import (
@@ -22,7 +25,7 @@ from utils.bot_emojis import (
 from cogs.hoso_utils import _calc_full_stats, _calc_linh_can_lop2
 
 
-def _build_embed_thuoc_tinh(ts: dict, user: discord.User) -> discord.Embed:
+def _build_embed_thuoc_tinh(ts: dict[str, Any], user: discord.User) -> discord.Embed:
     cg  = get_cg(ts["canh_gioi"])
     st  = _calc_full_stats(ts)
     ec  = exp_can_thiet(ts["canh_gioi"], ts["cap_nho"])

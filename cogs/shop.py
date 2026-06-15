@@ -65,9 +65,19 @@ def _fulfill_package(ts: dict[str, Any], goi: str) -> tuple[dict[str, Any], str]
             lq = {}
         co_ban = [q for q in LINH_QUA if q.get("loai") == "co_ban"]
         for q in co_ban:
-            lq[q["id"]] = lq.get(q["id"], 0) + 20
+            lq[q["id"]] = lq.get(q["id"], 0) + 30
         ts["linh_qua"] = lq
-        desc_lines = [f"{q['emoji']} {q['ten']} ×{lq.get(q['id'], 0)}" for q in co_ban]
+        desc_lines = [f"{q['emoji']} {q['ten']} ×30" for q in co_ban]
+
+    elif goi == "nguyen_to_qua":
+        lq = ts.get("linh_qua", {})
+        if not isinstance(lq, dict):
+            lq = {}
+        hiem = [q for q in LINH_QUA if q.get("loai") == "hiem"]
+        for q in hiem:
+            lq[q["id"]] = lq.get(q["id"], 0) + 30
+        ts["linh_qua"] = lq
+        desc_lines = [f"{q['emoji']} {q['ten']} ×30" for q in hiem]
 
     elif goi == "phap_bao":
         pb_ids = ts.get("phap_bao", [])
@@ -147,14 +157,15 @@ class Shop(commands.Cog):
     # ── /gencode ─────────────────────────────────────────────────────────
     @app_commands.command(name="gencode", description="[Owner] Tạo promo code cho gói")
     @app_commands.describe(
-        goi="Loại gói: dot_pha_tc / ngu_hanh_qua / phap_bao",
+        goi="Loại gói: dot_pha_tc / ngu_hanh_qua / nguyen_to_qua / phap_bao",
         code="Code tuỳ ý (để trống = random)",
         so_luong="Số code cần tạo (1-20)",
     )
     @app_commands.choices(
         goi=[
             app_commands.Choice(name="💎 Đột Phá Thân Cấp", value="dot_pha_tc"),
-            app_commands.Choice(name="🍎 Ngũ Hành Linh Quả", value="ngu_hanh_qua"),
+            app_commands.Choice(name="🍎 Ngũ Hành Linh Quả (Hỏa Thủy Thổ Mộc Kim)", value="ngu_hanh_qua"),
+            app_commands.Choice(name="🌀 Nguyên Tố Linh Quả (Phong Lôi Quang Ám)", value="nguyen_to_qua"),
             app_commands.Choice(name="⚔️ Pháp Bảo Ngẫu Nhiên", value="phap_bao"),
         ]
     )

@@ -2,6 +2,8 @@
 COG: Tự Reset Nhân Vật — /reset (tối đa 3 lần)
 Reset count lưu trong bảng reset_log riêng, không bị mất khi xóa nhân vật.
 """
+from __future__ import annotations
+
 import discord
 from discord import app_commands
 from discord.ext import commands

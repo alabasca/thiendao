@@ -11,6 +11,8 @@ Chạy:
     BOT_TOKEN=your_token python bot.py
 """
 
+from __future__ import annotations
+
 import discord
 from discord.ext import commands
 import asyncio, os, sys, logging, time

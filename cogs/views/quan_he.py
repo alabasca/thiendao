@@ -3,6 +3,8 @@
 ║  QUAN HỆ — Tặng Quà & Kết Giao                      ║
 ╚══════════════════════════════════════════════════════╝
 """
+from __future__ import annotations
+
 import discord
 import logging
 

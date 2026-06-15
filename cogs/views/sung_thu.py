@@ -2,6 +2,9 @@
 cogs/views/sung_thu.py
 Hệ thống Sủng Thú — 9 hệ × 2 tier = 18 sủng thú
 """
+from __future__ import annotations
+from typing import Any
+
 from cogs.views._common import *
 from utils.config import (
     SUNG_THU, SUNG_THU_BY_ID, SUNG_THU_BY_HE,
@@ -30,7 +33,7 @@ HE_TEN = {
 }
 
 
-def _parse_sung_thu(ts: dict) -> dict:
+def _parse_sung_thu(ts: dict[str, Any]) -> dict:
     """Parse sung_thu từ DB → dict {id: {level, obtained_at}}."""
     raw = ts.get("sung_thu", {})
     if isinstance(raw, str):
@@ -39,7 +42,7 @@ def _parse_sung_thu(ts: dict) -> dict:
     return raw if isinstance(raw, dict) else {}
 
 
-def _calc_sung_thu_buff(ts: dict) -> dict:
+def _calc_sung_thu_buff(ts: dict[str, Any]) -> dict:
     """Tính tổng buff từ tất cả sủng thú đang active."""
     result = {
         "at_pct": 0.0, "def_pct": 0.0, "hp_pct": 0.0,
@@ -80,7 +83,7 @@ def _calc_sung_thu_buff(ts: dict) -> dict:
     return result
 
 
-def _get_active_skill(ts: dict) -> dict | None:
+def _get_active_skill(ts: dict[str, Any]) -> dict | None:
     """Lấy active skill của sủng thú đang active (chỉ Tier 2 có)."""
     active_id = ts.get("sung_thu_active", -1)
     if active_id < 0:
@@ -91,7 +94,7 @@ def _get_active_skill(ts: dict) -> dict | None:
     return SUNG_THU_SKILL.get(st["he"], {}).get("active")
 
 
-def _embed_sung_thu_list(ts: dict, user: discord.User) -> discord.Embed:
+def _embed_sung_thu_list(ts: dict[str, Any], user: discord.User) -> discord.Embed:
     """Embed danh sách sủng thú đang sở hữu."""
     kho = _parse_sung_thu(ts)
     active_id = ts.get("sung_thu_active", -1)
@@ -143,7 +146,7 @@ def _embed_sung_thu_list(ts: dict, user: discord.User) -> discord.Embed:
     return embed
 
 
-def _embed_st_detail(st: dict, level: int, ts: dict) -> discord.Embed:
+def _embed_st_detail(st: dict, level: int, ts: dict[str, Any]) -> discord.Embed:
     """Embed chi tiết 1 sủng thú."""
     mult = SUNG_THU_LEVEL_MULT.get(level, 1.0)
     if st["tier"] == 2:
@@ -218,7 +221,7 @@ def _embed_st_detail(st: dict, level: int, ts: dict) -> discord.Embed:
 
 
 
-def _build_guide_embeds(ts: dict) -> list:
+def _build_guide_embeds(ts: dict[str, Any]) -> list:
     """Tạo danh sách embed hướng dẫn sủng thú — chia nhỏ tránh 1024 ký tự/field."""
     lc_ids = set(ts.get("linh_can_so_huu", []))
     active_id = ts.get("sung_thu_active", -1)
@@ -364,7 +367,7 @@ def _build_guide_embeds(ts: dict) -> list:
 class SungThuView(discord.ui.View):
     """View quản lý sủng thú."""
 
-    def __init__(self, parent, ts: dict, user: discord.User, actor_id: int = None):
+    def __init__(self, parent, ts: dict[str, Any], user: discord.User, actor_id: int = None):
         super().__init__(timeout=120)
         self.parent   = parent
         self.ts       = ts

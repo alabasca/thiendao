@@ -1,0 +1,14 @@
+{
+    "pythonVersion": "3.11",
+    "pythonPlatform": "Linux",
+    "typeCheckingMode": "basic",
+    "reportMissingImports": true,
+    "reportMissingTypeStubs": false,
+    "reportUnusedImport": "warning",
+    "reportUnboundVariable": "error",
+    "reportOptionalSubscript": false,
+    "reportOptionalMemberAccess": false,
+    "reportAttributeAccessIssue": false,
+    "reportCallIssue": false,
+    "exclude": ["__pycache__", "scripts", ".git", "logs"]
+}

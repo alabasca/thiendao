@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Any
+
 from cogs.views._common import *
 from utils.embeds import e_loi, e_ok, e_warn, e_info, safe_defer
 import re as _re
@@ -444,7 +447,7 @@ class KhoDoView(discord.ui.View):
         "ĐP Thể Chất":    ("Nguyên Liệu ĐP TC",),
     }
 
-    def __init__(self, parent: "HoSoView", user: discord.User, ts: dict, items: list, actor_id: int = None):
+    def __init__(self, parent: "HoSoView", user: discord.User, ts: dict[str, Any], items: list, actor_id: int = None):
         super().__init__(timeout=600)
         self.parent   = parent
         self.user     = user

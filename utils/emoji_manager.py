@@ -4,6 +4,8 @@ Cung cấp helper tra cứu emoji theo key stat.
 Import get_stat_emoji từ đây thay vì hardcode rải rác.
 """
 
+from __future__ import annotations
+
 from utils.bot_emojis import (
     E_SINH_LUC, E_LINH_LUC, E_CONG_KICH, E_PHONG_NGU, E_LINH_THACH,
     E_HOI_TAM, E_HO_TAM, E_BAO_KICH, E_KHANG_BAO,

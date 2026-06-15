@@ -15,6 +15,8 @@ from utils.bot_emojis import (
 )
 
 from data.game_data import *
+from data.bi_canh_data import BI_CANH, BI_CANH_BY_ID
+from data.boss_data import BOSS_THE_GIOI, BOSS_SPAWN_HOURS_VN
 
 load_dotenv()  # Tự động đọc file .env
 

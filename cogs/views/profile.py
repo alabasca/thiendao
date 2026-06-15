@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Any
+
 from cogs.views._common import *
 from utils.bot_emojis import E_SINH_LUC, E_CONG_KICH, E_PHONG_NGU, E_HOI_TAM, E_HO_TAM, E_BAO_KICH, E_KHANG_BAO, E_TU_VI, E_LINH_THACH
 import re as _re
@@ -218,7 +221,7 @@ class ChinhSuaModal(discord.ui.Modal, title="✏️ Chỉnh Sửa Hồ Sơ"):
         max_length=100,
         style=discord.TextStyle.paragraph)
 
-    def __init__(self, parent: "HoSoView", ts: dict):
+    def __init__(self, parent: "HoSoView", ts: dict[str, Any]):
         super().__init__()
         self.parent = parent
         self.ts_cu  = ts

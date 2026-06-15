@@ -1,10 +1,13 @@
+from __future__ import annotations
+from typing import Any
+
 from utils.config import PHAP_BAO_SKILL, PHAP_BAO_BY_ID, LINH_QUA_BC_DROP, DOTPHA_TC_NGUYEN_LIEU, DOTPHA_TC_DROP_RATE, DOTPHA_TC_NL_BY_ID
 from utils.config import SUNG_THU
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from cogs.hoso import HoSoView
 
-def _dtc_kho(ts: dict) -> dict:
+def _dtc_kho(ts: dict[str, Any]) -> dict:
     """Parse dotpha_tc_nl từ DB (có thể là str JSON hoặc dict)."""
     raw = ts.get("dotpha_tc_nl", {})
     if isinstance(raw, dict): return raw
@@ -37,7 +40,7 @@ from cogs.hoso_utils import (
     _calc_stats, _calc_full_stats, SESSION_TIMEOUT_SECS,
 )
 
-def _embed_bi_canh_chon(ts: dict, user) -> discord.Embed:
+def _embed_bi_canh_chon(ts: dict[str, Any], user) -> discord.Embed:
     cg      = get_cg(ts["canh_gioi"])
     tl_hien  = get_the_luc(ts)
     tl_max   = the_luc_toi_da(ts.get("canh_gioi", 0))
@@ -234,7 +237,7 @@ class BiCanhChuanBiView(discord.ui.View):
 
 
 class BiCanhChonView(discord.ui.View):
-    def __init__(self, parent: "HoSoView", ts: dict, actor_id: int = None, guild_id: int = 0):
+    def __init__(self, parent: "HoSoView", ts: dict[str, Any], actor_id: int = None, guild_id: int = 0):
         super().__init__(timeout=300)  # auto-cleanup
         self.parent   = parent
         self.ts       = ts

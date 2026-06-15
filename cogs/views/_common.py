@@ -1,6 +1,8 @@
 """
 Shared imports dùng chung cho tất cả views trong cogs/views/
 """
+from __future__ import annotations
+
 import discord
 import asyncio
 import random
@@ -59,9 +61,10 @@ from utils.database import (
     get_boss_guild_messages, save_boss_guild_message, clear_boss_guild_messages,
 )
 
-# Import helpers từ hoso_utils (tránh circular — hoso_utils không import views)
+# Import helpers từ hoso_utils và _session
+from cogs.views._session import BiCanhSession, _bc_sessions
 from cogs.hoso_utils import (
-    BiCanhSession, _bc_sessions, _run_task,
+    _run_task,
     _back_to_hoso, _parse_emoji, _calc_stats, _calc_full_stats, _calc_linh_can_lop2,
     _gen_rooms, _apply_event,
     _send_hoso_embed, _embed_hoso, _embed_tu_luyen, _embed_hanh_dong,

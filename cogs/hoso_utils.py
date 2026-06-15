@@ -1,6 +1,9 @@
 """
 hoso_utils.py — Shared helpers, embeds, constants cho hoso system
 """
+from __future__ import annotations
+from typing import Any
+
 import discord
 import asyncio
 import random
@@ -72,47 +75,8 @@ def diem_danh_day_delta(last_claim_ts: int, now_ts: int | None = None) -> int:
 _st_buff_fn = None
 ITEMS_PER_PAGE = 5
 
-# ══════════════════════════════════════════════════════════════
-#  BI CANH SESSION  (in-memory)
-# ══════════════════════════════════════════════════════════════
-@dataclass
-class BiCanhSession:
-    user_id:    int
-    bc_id:      int
-    ts:         dict
-    phong_list: list
-    phong_hien: int   = 0
-    hp_hien:    int   = 0
-    ll_hien:    int   = 0    # linh lực hiện tại (tiêu hao khi dùng kỹ năng)
-    exp_tich:   int   = 0
-    lt_tich:    int   = 0
-    # Công pháp cooldown (tính bằng lượt)
-    skill_cd:   dict | None = field(default=None)    # {"vo_ky": 0, ...}
-    skill_names:dict | None = field(default=None)    # tên cp đang trang bị
-    nl_tich:           dict = field(default_factory=dict)
-    dan_tich:          dict = field(default_factory=dict)  # key="cg_id:cap_nho_sau", value=count
-    linh_qua_tich:     dict = field(default_factory=dict)  # key=linh_can_id, value=count
-    manh_tich:         dict = field(default_factory=dict)  # key=linh_can_id, value=count
-    dotpha_tc_nl_tich: dict = field(default_factory=dict)  # key=nl_id, value=count (tài nguyên đột phá TC)
-    sung_thu_drop:     list = field(default_factory=list)  # SungThu objects drop từ bí cảnh
-    logs:       list  = field(default_factory=list)
-    ket_thuc:   bool  = False
-    created_at: int   = 0   # timestamp tạo session để timeout
-    last_lt:    int   = 0   # thưởng phòng vừa thắng (đã × hệ số)
-    last_exp:   int   = 0
-    he_so:      float = 1.0  # hệ số áp dụng
+from cogs.views._session import BiCanhSession, _bc_sessions, SESSION_TIMEOUT_SECS, _cleanup_stale_sessions
 
-_bc_sessions: dict[tuple[int, int], BiCanhSession] = {}  # key = (guild_id, user_id)
-SESSION_TIMEOUT_SECS = 1800  # 30 phút
-
-def _cleanup_stale_sessions() -> int:
-    """Xóa các session bị bỏ quên > 30 phút."""
-    now = int(time.time())
-    stale = [key for key, s in _bc_sessions.items()
-             if now - s.created_at > SESSION_TIMEOUT_SECS and not s.ket_thuc]
-    for key in stale:
-        _bc_sessions.pop(key, None)
-    return len(stale)
 _bg_tasks: set = set()  # giữ reference để task không bị GC
 
 def _run_task(coro) -> asyncio.Task:
@@ -169,7 +133,7 @@ def _parse_emoji(s: str) -> discord.PartialEmoji | str:
         return discord.PartialEmoji(name=m.group(1), id=int(m.group(2)))
     return s
 
-def _calc_linh_can_passive(ts: dict) -> dict:
+def _calc_linh_can_passive(ts: dict[str, Any]) -> dict[str, Any]:
     """Tính tổng passive lớp 1 từ tất cả linh căn đang sở hữu (mỗi loại tính 1 lần)."""
     result = {"at_flat": 0, "df_flat": 0, "hp_flat": 0,
               "at_pct": 0.0, "def_pct": 0.0, "hp_pct": 0.0,
@@ -200,7 +164,7 @@ def _calc_linh_can_passive(ts: dict) -> dict:
     return result
 
 
-def _calc_linh_can_lop2(ts: dict) -> dict:
+def _calc_linh_can_lop2(ts: dict[str, Any]) -> dict[str, Any]:
     """Tính tổng buff lớp 2 tích lũy từ cột linh_can_lop2 trong DB.
     Đây là các buff được cộng dồn mỗi lần đột phá đại cảnh thành công.
     Format DB: {"hoi_tam": 200, "ho_tam": 100, "bao_kich": 3.0, "drop_rate": 6.0, ...}
@@ -215,7 +179,7 @@ def _calc_linh_can_lop2(ts: dict) -> dict:
     return raw
 
 
-def _calc_stats(ts: dict) -> dict:  # noqa: PLR0912
+def _calc_stats(ts: dict[str, Any]) -> dict[str, Any]:  # noqa: PLR0912
     # Pháp bảo: chỉ 1 pháp bảo active đóng góp stats
     _pb_active_id = ts.get("phap_bao_active", -1)
     _pb_active    = PHAP_BAO_BY_ID.get(_pb_active_id) if _pb_active_id >= 0 else None
@@ -305,7 +269,7 @@ def _calc_stats(ts: dict) -> dict:  # noqa: PLR0912
             "tc_lt_m":      tc_lt_m,
             "van_dinh_all_stat_pct": vd_pct}
 
-def _calc_full_stats(ts: dict) -> dict:
+def _calc_full_stats(ts: dict[str, Any]) -> dict[str, Any]:
     """Tính toàn bộ chỉ số thuộc tính như hiển thị trong /thuoctính."""
     st        = _calc_stats(ts)
     cp_b      = st["cp_b"]
@@ -448,7 +412,7 @@ async def _send_hoso_embed(inter_or_msg, embed, view, ts, *, followup=False, edi
     else:
         return await inter_or_msg.response.send_message(embed=embed, view=view, ephemeral=True)
 
-def _embed_hoso(ts: dict, user: discord.User, is_own: bool = True) -> discord.Embed:
+def _embed_hoso(ts: dict[str, Any], user: discord.User, is_own: bool = True) -> discord.Embed:
     cg  = get_cg(ts["canh_gioi"])
     st  = _calc_stats(ts)
 
@@ -623,7 +587,7 @@ def _embed_hoso(ts: dict, user: discord.User, is_own: bool = True) -> discord.Em
     return embed
 
 
-def _embed_tu_luyen(ts: dict, user: discord.User) -> discord.Embed:
+def _embed_tu_luyen(ts: dict[str, Any], user: discord.User) -> discord.Embed:
     """Embed tab Tu Luyện — Thức Hải phong cách"""
     cg  = get_cg(ts["canh_gioi"])
     st  = _calc_stats(ts)
@@ -744,7 +708,7 @@ def _embed_tu_luyen(ts: dict, user: discord.User) -> discord.Embed:
     embed.set_footer(text="⚡ Tu Luyện | " + ts["dao_hieu"])
     return embed
 
-def _embed_hanh_dong(ts: dict, user: discord.User) -> discord.Embed:
+def _embed_hanh_dong(ts: dict[str, Any], user: discord.User) -> discord.Embed:
     now = int(time.time())
     embed = discord.Embed(title=f"{E_CONG_KICH}  HÀNH ĐỘNG", color=0xFF6B35)
     embed.set_author(name=ts["dao_hieu"], icon_url=user.display_avatar.url)
@@ -763,7 +727,7 @@ def _embed_hanh_dong(ts: dict, user: discord.User) -> discord.Embed:
     embed.set_footer(text="⚔️ Tab Hành Động")
     return embed
 
-def _build_inventory(ts: dict) -> list[dict]:
+def _build_inventory(ts: dict[str, Any]) -> list[dict]:
     """Gom tất cả vật phẩm đang sở hữu thành list có mô tả rõ ràng."""
     items = []
 
@@ -901,7 +865,7 @@ def _build_inventory(ts: dict) -> list[dict]:
     return items
 
 
-def _embed_kho_trang(ts: dict, user: discord.User, items: list, trang: int,
+def _embed_kho_trang(ts: dict[str, Any], user: discord.User, items: list, trang: int,
                      tab_label: str = "📦 Tất Cả") -> discord.Embed:
     """Tạo embed túi đồ — hiện theo tab đang chọn, 5 item/trang."""
     embed = discord.Embed(color=0x2B2D31)

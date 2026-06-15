@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import Any
+
 from cogs.views._common import *
 import json
 from utils.config import DOTPHA_TC_NGUYEN_LIEU, DOTPHA_TC_DROP_RATE, DOTPHA_TC_NL_BY_ID
@@ -10,7 +13,7 @@ from utils.database import save_boss_guild_message, get_boss_guild_messages, cle
 from utils.config import SUNG_THU, SUNG_THU_BY_ID
 log = logging.getLogger("hoso")
 
-def _dtc_kho(ts: dict) -> dict:
+def _dtc_kho(ts: dict[str, Any]) -> dict:
     """Parse dotpha_tc_nl từ DB (str JSON hoặc dict)."""
     raw = ts.get("dotpha_tc_nl", {})
     if isinstance(raw, dict): return raw
@@ -159,7 +162,7 @@ class KetQuaBossView(discord.ui.View):
 
 class LobbyBossView(discord.ui.View):
     """View sảnh boss khi chưa có boss nào active — Xem Kết Quả / Hướng Dẫn / Quay Lại."""
-    def __init__(self, parent: "HoSoView", ts: dict, boss_states: list):
+    def __init__(self, parent: "HoSoView", ts: dict[str, Any], boss_states: list):
         super().__init__(timeout=120)
         self.parent      = parent
         self.ts          = ts
@@ -896,7 +899,7 @@ async def _send_or_edit_direct(boss_id: int, embed, view, img_path: str, guild):
 
 
 class BossView(discord.ui.View):
-    def __init__(self, parent: "HoSoView", ts: dict, boss_states: list):
+    def __init__(self, parent: "HoSoView", ts: dict[str, Any], boss_states: list):
         super().__init__(timeout=120)
         self.parent      = parent
         self.ts          = ts

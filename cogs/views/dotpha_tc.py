@@ -1,6 +1,9 @@
 """
 View đột phá thể chất — mở từ hồ sơ chính
 """
+from __future__ import annotations
+from typing import Any
+
 from cogs.views._common import *
 import re
 import json
@@ -15,7 +18,7 @@ from utils.bot_emojis import (
 
 log = logging.getLogger("hoso")
 
-def _dtc_kho(ts: dict) -> dict:
+def _dtc_kho(ts: dict[str, Any]) -> dict:
     """Parse dotpha_tc_nl từ DB (str JSON hoặc dict)."""
     raw = ts.get("dotpha_tc_nl", {})
     if isinstance(raw, dict): return raw
@@ -53,7 +56,7 @@ def _spin(pool_key: str) -> str:
     return random.choices(tcs, weights=weights, k=1)[0]
 
 
-def _embed_chon(ts: dict) -> discord.Embed:
+def _embed_chon(ts: dict[str, Any]) -> discord.Embed:
     tc_cur = THE_CHAT_BY_ID.get(ts.get("the_chat", ""))
     tc_str = f"{tc_cur['emoji']} **{tc_cur['ten']}** [{tc_cur['rate']}%]" if tc_cur else "*(chưa xác định)*"
     kho    = _dtc_kho(ts)
@@ -126,7 +129,7 @@ def _embed_ket_qua(tc_new: dict, tc_old: dict, n_used: int, pool_key: str) -> di
 
 class DotPhaTCView(discord.ui.View):
     """View đột phá thể chất — phase 1 chọn tài nguyên."""
-    def __init__(self, parent, ts: dict, actor_id: int = None):
+    def __init__(self, parent, ts: dict[str, Any], actor_id: int = None):
         super().__init__(timeout=120)
         self.parent   = parent
         self.ts       = ts
@@ -238,7 +241,7 @@ class DotPhaTCView(discord.ui.View):
 class DotPhaTCKetQuaView(discord.ui.View):
     """Phase 2 — nhận hoặc hủy thể chất mới."""
     def __init__(self, parent, tc_new_id: str, tc_old: dict,
-                 n_used: int, pool_key: str, ts: dict, actor_id: int = None):
+                 n_used: int, pool_key: str, ts: dict[str, Any], actor_id: int = None):
         super().__init__(timeout=120)
         self.parent    = parent
         self.tc_new_id = tc_new_id

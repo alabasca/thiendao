@@ -362,81 +362,91 @@ class BiCanhChonView(discord.ui.View):
 
     def _make_enter_cb(self, bc_id: int):
         async def cb(inter: discord.Interaction):
-            if inter.user.id != self.actor_id:
-                return await inter.response.send_message("❌", ephemeral=True)
-            # Kiểm tra thể lực TRƯỚC khi respond
-            ts_fresh  = await get_tu_si(inter.user.id)
-            tl_hien   = get_the_luc(ts_fresh)
-            tran_hien = get_tran_the_luc(ts_fresh)
-            BC_PHI    = 10
-            # Ưu tiên trừ thể lực chính; nếu chính = 0 thì dùng tràn
-            if tl_hien >= BC_PHI:
-                new_tl   = tl_hien - BC_PHI
-                new_tran = tran_hien
-                dung_tran = False
-            elif tran_hien >= BC_PHI:
-                new_tl   = tl_hien
-                new_tran = tran_hien - BC_PHI
-                dung_tran = True
-            else:
-                # Cả hai không đủ
-                tl_max  = the_luc_toi_da(ts_fresh.get("canh_gioi", 0))
-                hoi_con = (BC_PHI - tl_hien) * THE_LUC_HOI if tl_hien < BC_PHI else 0
-                return await inter.response.send_message(
-                    embed=e_warn("⚡ Thể Lực Không Đủ",
-                        f"Cần **{BC_PHI} ⚡** để vào bí cảnh.\n"
-                        f"Thể lực chính: **{tl_hien}/{tl_max}**\n"
-                        f"Thể lực tràn: **{tran_hien}/{TRAN_THE_LUC_MAX}**\n"
-                        + (f"Hồi đủ sau: **{fmt_cd(hoi_con)}**" if hoi_con else "")),
-                    ephemeral=True)
-            # Defer trước khi làm bất kỳ việc nặng nào
             try:
-                await inter.response.defer()
+                if inter.user.id != self.actor_id:
+                    return await inter.response.send_message("❌", ephemeral=True)
+                # Kiểm tra thể lực TRƯỚC khi respond
+                ts_fresh  = await get_tu_si(inter.user.id)
+                tl_hien   = get_the_luc(ts_fresh)
+                tran_hien = get_tran_the_luc(ts_fresh)
+                BC_PHI    = 10
+                # Ưu tiên trừ thể lực chính; nếu chính = 0 thì dùng tràn
+                if tl_hien >= BC_PHI:
+                    new_tl   = tl_hien - BC_PHI
+                    new_tran = tran_hien
+                    dung_tran = False
+                elif tran_hien >= BC_PHI:
+                    new_tl   = tl_hien
+                    new_tran = tran_hien - BC_PHI
+                    dung_tran = True
+                else:
+                    # Cả hai không đủ
+                    tl_max  = the_luc_toi_da(ts_fresh.get("canh_gioi", 0))
+                    hoi_con = (BC_PHI - tl_hien) * THE_LUC_HOI if tl_hien < BC_PHI else 0
+                    return await inter.response.send_message(
+                        embed=e_warn("⚡ Thể Lực Không Đủ",
+                            f"Cần **{BC_PHI} ⚡** để vào bí cảnh.\n"
+                            f"Thể lực chính: **{tl_hien}/{tl_max}**\n"
+                            f"Thể lực tràn: **{tran_hien}/{TRAN_THE_LUC_MAX}**\n"
+                            + (f"Hồi đủ sau: **{fmt_cd(hoi_con)}**" if hoi_con else "")),
+                        ephemeral=True)
+                # Defer trước khi làm bất kỳ việc nặng nào
+                try:
+                    await inter.response.defer()
+                except Exception:
+                    log.exception("Lỗi bi_canh")
+                # Cleanup sessions cũ
+                _cleanup_stale_sessions()
+                # Vào bí cảnh luôn với full HP
+                full_st = _calc_stats(ts_fresh)
+                hp_vao  = full_st["hp_eff"]
+                await update_tu_si(inter.user.id,
+                    the_luc=new_tl,
+                    the_luc_cap_nhat=int(time.time()),
+                    tran_the_luc=new_tran,
+                    tran_the_luc_cap_nhat=int(time.time()),
+                    bc_thua_lan_truoc=0,
+                    hp=hp_vao)
+                if bc_id < 0 or bc_id >= len(BI_CANH):
+                    return await safe_followup(inter, "❌ Bí cảnh không hợp lệ!", ephemeral=True)
+                bc    = BI_CANH[bc_id]
+                rooms = _gen_rooms(bc)
+                # Sync toàn bộ chỉ số thuộc tính thực (pháp bảo, sủng thú, tông môn, linh căn)
+                full  = _calc_full_stats(ts_fresh)
+                ts_for_session = {
+                    **ts_fresh,
+                    "cong":      full["at"],
+                    "thu":       full["df"],
+                    "hp_max":    full["hp_eff"],
+                    "linh_luc":  full["linh_luc"],
+                    "hoi_tam":   full["hoi_tam"],
+                    "ho_tam":    full["ho_tam"],
+                    "bao_kich":  full["bao_kich"],
+                    "khang_bao": full["khang_bao"],
+                }
+                s = BiCanhSession(
+                    user_id=inter.user.id, bc_id=bc_id, ts=ts_for_session,
+                    phong_list=rooms, hp_hien=hp_vao,
+                    ll_hien=ts_for_session.get("linh_luc", 100),
+                    created_at=int(time.time()))
+                sess_key = (self.guild_id, inter.user.id)
+                _bc_sessions[sess_key] = s
+                view = BiCanhPhongView(self.parent, s, bc, bc_view=self)
+                self._select.disabled = True
+                view._compute_combat()
+                view._prepare_combat_buttons()
+                await safe_edit_message(inter,
+                    embed=view._embed_combat(inter.user, 0), view=view)
+                view._enqueue_combat(inter)
             except Exception:
-                log.exception("Lỗi bi_canh")
-            # Cleanup sessions cũ
-            _cleanup_stale_sessions()
-            # Vào bí cảnh luôn với full HP
-            full_st = _calc_stats(ts_fresh)
-            hp_vao  = full_st["hp_eff"]
-            await update_tu_si(inter.user.id,
-                the_luc=new_tl,
-                the_luc_cap_nhat=int(time.time()),
-                tran_the_luc=new_tran,
-                tran_the_luc_cap_nhat=int(time.time()),
-                bc_thua_lan_truoc=0,
-                hp=hp_vao)
-            if bc_id < 0 or bc_id >= len(BI_CANH):
-                return await safe_followup(inter, "❌ Bí cảnh không hợp lệ!", ephemeral=True)
-            bc    = BI_CANH[bc_id]
-            rooms = _gen_rooms(bc)
-            # Sync toàn bộ chỉ số thuộc tính thực (pháp bảo, sủng thú, tông môn, linh căn)
-            full  = _calc_full_stats(ts_fresh)
-            ts_for_session = {
-                **ts_fresh,
-                "cong":      full["at"],
-                "thu":       full["df"],
-                "hp_max":    full["hp_eff"],
-                "linh_luc":  full["linh_luc"],
-                "hoi_tam":   full["hoi_tam"],
-                "ho_tam":    full["ho_tam"],
-                "bao_kich":  full["bao_kich"],
-                "khang_bao": full["khang_bao"],
-            }
-            s = BiCanhSession(
-                user_id=inter.user.id, bc_id=bc_id, ts=ts_for_session,
-                phong_list=rooms, hp_hien=hp_vao,
-                ll_hien=ts_for_session.get("linh_luc", 100),
-                created_at=int(time.time()))
-            sess_key = (self.guild_id, inter.user.id)
-            _bc_sessions[sess_key] = s
-            view = BiCanhPhongView(self.parent, s, bc, bc_view=self)
-            self._select.disabled = True
-            view._compute_combat()
-            view._prepare_combat_buttons()
-            await safe_edit_message(inter,
-                embed=view._embed_combat(inter.user, 0), view=view)
-            view._enqueue_combat(inter)
+                log.exception("Lỗi khiêu chiến bí cảnh")
+                try:
+                    if not inter.response.is_done():
+                        await inter.response.send_message(
+                            embed=e_loi("❌ Lỗi", "Có lỗi xảy ra khi vào bí cảnh. Vui lòng thử lại."),
+                            ephemeral=True)
+                except Exception:
+                    log.exception("Lỗi gửi thông báo khiêu chiến")
         return cb
 
 

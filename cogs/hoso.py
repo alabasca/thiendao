@@ -748,8 +748,7 @@ class HoSoView(discord.ui.View):
                 so_lan_tran = int((ts["exp"] - ec) / (ec * 0.10))
                 tran_bonus  = min(so_lan_tran * 0.02, 0.45)
             
-            # Tính tỷ lệ ban đầu và giảm xuống 50% (nhân với 0.5)
-            ty_le = min(1.0, ty_le_co_ban + tran_bonus) * 0.5
+            ty_le = min(1.0, ty_le_co_ban + tran_bonus)
             
             ok = random.random() < ty_le
         else:

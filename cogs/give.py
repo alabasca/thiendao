@@ -19,6 +19,8 @@ from utils.config import (
     LINH_QUA, LINH_QUA_BY_ID, MANH_LINH_CAN_EMOJI, DOTPHA_TC_NGUYEN_LIEU,
     SUNG_THU, SUNG_THU_BY_ID,
     NGUYEN_LIEU,
+    DA_NGO_DAO_ID, DA_NGO_DAO_GIA,
+    DA_RESET_SKILL_TREE_ID, DA_RESET_SKILL_TREE_GIA,
     hp_max_cong_thuc, cong_cong_thuc, thu_cong_thuc,
     get_cg, get_cg_ten, fmt, exp_can_thiet,
 )
@@ -329,6 +331,26 @@ async def give_nl(inter: discord.Interaction, nguoi_dung: discord.Member,
     await update_tu_si(nguoi_dung.id, nguyen_lieu=kho)
     await safe_followup(inter, embed=_give_embed(nguoi_dung, "Nguyen Lieu",
         f"{nl['emoji']} **{nl['ten']}** x{so_luong}"), ephemeral=True)
+
+@give_group.command(name="dango", description="[Owner] Give Đá Ngộ Đạo / Đá Reset Skill Tree")
+@app_commands.describe(nguoi_dung="Người nhận", loai="1=Đá Ngộ Đạo, 2=Đá Reset Skill Tree", so_luong="Số lượng")
+@owner_only_check(OWNER_IDS)
+async def give_da_ngo_dao(inter: discord.Interaction, nguoi_dung: discord.Member,
+                          loai: app_commands.Range[int, 1, 2],
+                          so_luong: app_commands.Range[int, 1, 999] = 1):
+    await inter.response.defer(ephemeral=True)
+    ts = await get_tu_si(nguoi_dung.id)
+    if not ts:
+        return await safe_followup(inter, embed=e_loi("Lỗi", f"**{nguoi_dung.display_name}** chưa tu tiên!"), ephemeral=True)
+    if loai == 1:
+        item_id, item_name, item_emoji = DA_NGO_DAO_ID, "Đá Ngộ Đạo", "💎"
+    else:
+        item_id, item_name, item_emoji = DA_RESET_SKILL_TREE_ID, "Đá Reset Skill Tree", "🔄"
+    kho = ts.get("nguyen_lieu", {}).copy()
+    kho[item_id] = kho.get(item_id, 0) + so_luong
+    await update_tu_si(nguoi_dung.id, nguyen_lieu=kho)
+    await safe_followup(inter, embed=_give_embed(nguoi_dung, item_name,
+        f"{item_emoji} **{item_name}** ×{so_luong}\nTổng: **{kho[item_id]}**"), ephemeral=True)
 
 @give_group.command(name="dotphatcnl", description="[Owner] Give tai nguyen dot pha the chat")
 @app_commands.describe(nguoi_dung="Nguoi nhan", so_luong="So luong moi loai (1-99)")

@@ -234,18 +234,21 @@ class HoSoView(discord.ui.View):
         if not await self._guard(inter): return
         if not await safe_defer(inter, ephemeral=True):
             return
-        ts = await get_tu_si(inter.user.id)
-        if not ts:
-            return await safe_followup(inter,
-                "❌ Không tìm thấy hồ sơ! Dùng `/hoso` để tạo nhân vật.",
-                ephemeral=True)
-        items = _build_inventory(ts)
-        embed = _embed_kho_trang(ts, inter.user, items, 0)
-        view  = KhoDoView(self, inter.user, ts, items, actor_id=inter.user.id)
-        msg = await safe_followup(inter, embed=embed, view=view, ephemeral=True)
-        # Lưu message reference để modal có thể edit real-time
-        if msg:
-            view._original_msg = msg
+        try:
+            ts = await get_tu_si(inter.user.id)
+            if not ts:
+                return await safe_followup(inter,
+                    "❌ Không tìm thấy hồ sơ! Dùng `/hoso` để tạo nhân vật.",
+                    ephemeral=True)
+            items = _build_inventory(ts)
+            embed = _embed_kho_trang(ts, inter.user, items, 0)
+            view  = KhoDoView(self, inter.user, ts, items, actor_id=inter.user.id)
+            msg = await safe_followup(inter, embed=embed, view=view, ephemeral=True)
+            if msg:
+                view._original_msg = msg
+        except Exception:
+            log.exception(f"_cb_kho_do crash user={inter.user.id}")
+            await safe_followup(inter, "❌ Lỗi khi mở túi đồ — vui lòng thử lại!", ephemeral=True)
 
     async def _cb_chinh_sua(self, inter: discord.Interaction):
         if not await self._guard(inter): return

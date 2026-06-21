@@ -687,6 +687,7 @@ class KhoDoView(discord.ui.View):
                 f"{sel['mo_ta']}"
             ),
             color=0xFFD700)
+        await inter.response.send_message(embed=embed, ephemeral=True)
 
     async def _on_tab(self, inter: discord.Interaction):
         if inter.user.id != self.actor_id:

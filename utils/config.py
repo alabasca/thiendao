@@ -233,9 +233,11 @@ def y_canh_diem_toi_da(so_lan_ts: int) -> int:
 
 DA_NGO_DAO_ID = "da_ngo_dao"
 DA_NGO_DAO_GIA = 5000  # linh thạch per stone
+DA_NGO_DAO_DAILY_LIMIT = 100  # giới hạn mua/ngày
 
 DA_RESET_SKILL_TREE_ID = "da_reset_skill_tree"
 DA_RESET_SKILL_TREE_GIA = 20000  # linh thạch
+DA_RESET_SKILL_TREE_DAILY_LIMIT = 5  # giới hạn mua/ngày
 
 Y_CANH_NHANH = [
     {

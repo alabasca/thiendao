@@ -1451,19 +1451,20 @@ class BiCanhPhongView(discord.ui.View):
         # Sủng thú: 0.1% × drop_m
         _drop_sung_thu_bc(s, la_boss, drop_m=drop_m)
 
-        # Drop Ý Cảnh items: Đá Ngộ Đạo (5% boss, 1% quái), Đá Reset Skill Tree (2% boss)
+        # Drop Ý Cảnh items: Đá Ngộ Đạo (2% boss, 0.5% quái, yêu cầu trùng sinh)
         from utils.config import DA_NGO_DAO_ID, DA_RESET_SKILL_TREE_ID
         _bc_id = s.bc_id
-        if la_boss:
-            if _bc_id >= 5 and random.random() < 0.05 * drop_m:
+        if _da_trung_sinh:
+            if la_boss:
+                if _bc_id >= 5 and random.random() < 0.02 * drop_m:
+                    s.nl_tich[DA_NGO_DAO_ID] = s.nl_tich.get(DA_NGO_DAO_ID, 0) + 1
+                    s.logs.append(f"💎 Nhận **1 Đá Ngộ Đạo**!")
+                if _bc_id >= 7 and random.random() < 0.02 * drop_m:
+                    s.nl_tich[DA_RESET_SKILL_TREE_ID] = s.nl_tich.get(DA_RESET_SKILL_TREE_ID, 0) + 1
+                    s.logs.append(f"🔄 Nhận **1 Đá Reset Skill Tree**!")
+            elif _bc_id >= 5 and random.random() < 0.005 * drop_m:
                 s.nl_tich[DA_NGO_DAO_ID] = s.nl_tich.get(DA_NGO_DAO_ID, 0) + 1
                 s.logs.append(f"💎 Nhận **1 Đá Ngộ Đạo**!")
-            if _bc_id >= 7 and random.random() < 0.02 * drop_m:
-                s.nl_tich[DA_RESET_SKILL_TREE_ID] = s.nl_tich.get(DA_RESET_SKILL_TREE_ID, 0) + 1
-                s.logs.append(f"🔄 Nhận **1 Đá Reset Skill Tree**!")
-        elif _bc_id >= 5 and random.random() < 0.01 * drop_m:
-            s.nl_tich[DA_NGO_DAO_ID] = s.nl_tich.get(DA_NGO_DAO_ID, 0) + 1
-            s.logs.append(f"💎 Nhận **1 Đá Ngộ Đạo**!")
 
         # ── Sự kiện ngẫu nhiên (40%) — áp dụng SAU khi tính thưởng ──
         _sk = phong.get("su_kien")

@@ -864,6 +864,8 @@ def _build_inventory(ts: dict[str, Any]) -> list[dict]:
 
     # ── Nguyên liệu ─────────────────────────────────────────────
     for k, v in ts["nguyen_lieu"].items():
+        if not k.lstrip("-").isdigit():
+            continue
         idx = int(k)
         if idx < len(NGUYEN_LIEU) and v > 0:
             n = NGUYEN_LIEU[idx]

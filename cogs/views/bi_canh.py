@@ -47,7 +47,18 @@ def _embed_bi_canh_chon(ts: dict[str, Any], user) -> discord.Embed:
     tl_max   = the_luc_toi_da(ts.get("canh_gioi", 0))
     tran_hien = get_tran_the_luc(ts)
     if tl_hien < tl_max:
-        hoi_tiep = THE_LUC_HOI - (int(time.time()) - ts.get("the_luc_cap_nhat", 0)) % THE_LUC_HOI
+        # Tính interval hồi thể lực (có Ý Cảnh giảm)
+        from utils.config import Y_CANH_ALL_NODES
+        hoi_giam = 0
+        raw_yc = ts.get("y_canh", {})
+        if isinstance(raw_yc, dict) and raw_yc:
+            for nid, lv in raw_yc.items():
+                if lv <= 0: continue
+                nd_cfg = Y_CANH_ALL_NODES.get(nid)
+                if nd_cfg and "the_luc_hoi" in nd_cfg.get("effect", {}):
+                    hoi_giam += nd_cfg["effect"]["the_luc_hoi"] * lv
+        hoi_interval = max(10, THE_LUC_HOI - hoi_giam)
+        hoi_tiep = hoi_interval - (int(time.time()) - ts.get("the_luc_cap_nhat", 0)) % hoi_interval
         tl_str  = f"{tl_hien}/{tl_max} ⚡  *(+1 sau {hoi_tiep}s)*"
     else:
         tl_str  = f"{tl_hien}/{tl_max} ⚡"

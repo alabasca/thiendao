@@ -20,6 +20,25 @@ from utils.embeds import e_loi, e_ok, e_warn, safe_followup
 
 log = logging.getLogger("y_canh")
 
+EFFECT_LABELS = {
+    "at_pct":      "ATK",
+    "def_pct":     "DEF",
+    "hp_pct":      "HP",
+    "exp_pct":     "EXP",
+    "drop_rate":   "Tỉ lệ rơi",
+    "the_luc_hoi": "Hồi thể lực nhanh",
+    "lt_nhan":     "Linh thạch nhận",
+    "hoi_tam":     "Hội Tâm",
+    "ho_tam":      "Hộ Tâm",
+    "bao_kich":    "Bạo Kích",
+    "khang_bao":   "Kháng Bạo",
+    "linh_luc_pct":"Linh Lực",
+    "crit_dmg":    "Sát thương Bạo Kích",
+    "hut_mau_crit":"Hút máu crit",
+    "cd_giam":     "Giảm CD",
+    "hoi_sinh_luc":"Hồi Sinh Lực",
+}
+
 
 def _get_y_canh(ts: dict) -> dict:
     raw = ts.get("y_canh", {})
@@ -74,11 +93,25 @@ def _embed_y_canh(ts: dict) -> discord.Embed:
             lv = y_canh.get(nd["id"], 0)
             max_lv = nd["max_lv"]
             cost = nd["cost"][lv] if lv < len(nd["cost"]) else "MAX"
-            eff_str = ", ".join(f"+{v}" for v in nd["effect"].values())
+            eff_parts = []
+            for k, v in nd["effect"].items():
+                label = EFFECT_LABELS.get(k, k)
+                val = v * max(lv, 1)
+                if k in ("exp_pct", "drop_rate", "at_pct", "def_pct", "hp_pct",
+                         "khang_bao", "linh_luc_pct", "crit_dmg",
+                         "hut_mau_crit", "lt_nhan", "bao_kich"):
+                    eff_parts.append(f"{label}: +{val}%")
+                elif k == "the_luc_hoi":
+                    eff_parts.append(f"{label}: -{val}s/điểm")
+                elif k == "cd_giam":
+                    eff_parts.append(f"{label}: -{val}s")
+                else:
+                    eff_parts.append(f"{label}: +{val}")
+            eff_str = ", ".join(eff_parts)
             status = f"**Lv.{lv}/{max_lv}**" if lv < max_lv else f"**MAX**"
             lines.append(f"{status} {nd['ten']} — {eff_str} *(cost: {cost})*")
         embed.add_field(
-            name=f"{nhanh['emoji']} {nhanh['ten']}",
+            name=nhanh['ten'],
             value="\n".join(lines),
             inline=False,
         )
@@ -155,12 +188,25 @@ class YCanhView(discord.ui.View):
             max_lv = nd["max_lv"]
             if lv < max_lv:
                 cost = nd["cost"][lv]
-                status = f"🟢 Lv.{lv}/{max_lv} — Chi phí: **{cost}** đá"
+                status = f"**Lv.{lv}/{max_lv}** — Chi phí: **{cost}** đá"
             else:
-                status = "✅ MAX"
+                status = "**MAX**"
             eff_parts = []
             for k, v in nd["effect"].items():
-                eff_parts.append(f"{k}: +{v * max(lv, 1)}")
+                label = EFFECT_LABELS.get(k, k)
+                val = v * max(lv, 1)
+                if k in ("exp_pct", "drop_rate", "at_pct", "def_pct", "hp_pct",
+                         "khang_bao", "linh_luc_pct", "crit_dmg",
+                         "hut_mau_crit", "lt_nhan"):
+                    eff_parts.append(f"{label}: +{val}%")
+                elif k == "the_luc_hoi":
+                    eff_parts.append(f"{label}: -{val}s/điểm")
+                elif k == "bao_kich":
+                    eff_parts.append(f"{label}: +{val}%")
+                elif k == "cd_giam":
+                    eff_parts.append(f"{label}: -{val}s")
+                else:
+                    eff_parts.append(f"{label}: +{val}")
             embed.add_field(
                 name=f"{nd['ten']}",
                 value=f"{status}\n{', '.join(eff_parts)}",

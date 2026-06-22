@@ -707,8 +707,10 @@ def the_luc_toi_da(canh_gioi: int) -> int:
 
 
 def get_the_luc(ts: dict) -> int:
-    """Tính thể lực chính hiện tại (hồi 1 phút/điểm, tối đa 250+CG×20)."""
+    """Tính thể lực chính hiện tại (hồi N giây/điểm, tối đa 250+CG×20).
+    Ý Cảnh 'Sinh Cơ Vô Tận' giảm thời gian hồi mỗi điểm."""
     import time as _time
+    from utils.config import Y_CANH_ALL_NODES
     cg = ts.get("canh_gioi", 0)
     tl_max = the_luc_toi_da(cg)
     tl = ts.get("the_luc", tl_max)
@@ -716,7 +718,18 @@ def get_the_luc(ts: dict) -> int:
     if tl >= tl_max:
         return tl_max
     elapsed = int(_time.time()) - cap_nhat
-    hoi = elapsed // THE_LUC_HOI
+    # Ý Cảnh: the_luc_hoi giảm giây hồi mỗi điểm
+    hoi_giam = 0
+    raw_yc = ts.get("y_canh", {})
+    if isinstance(raw_yc, dict) and raw_yc:
+        for nid, lv in raw_yc.items():
+            if lv <= 0:
+                continue
+            nd_cfg = Y_CANH_ALL_NODES.get(nid)
+            if nd_cfg and "the_luc_hoi" in nd_cfg.get("effect", {}):
+                hoi_giam += nd_cfg["effect"]["the_luc_hoi"] * lv
+    hoi_interval = max(10, THE_LUC_HOI - hoi_giam)
+    hoi = elapsed // hoi_interval
     return min(tl_max, tl + hoi)
 
 

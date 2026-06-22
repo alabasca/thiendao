@@ -434,7 +434,7 @@ def _gen_rooms(bc: dict) -> list[dict]:
     for q in picked:
         sk = random.choice(SU_KIEN_BI_CANH) if random.random() < 0.4 else None
         rooms.append({"loai": "quai", "data": q, "su_kien": sk})
-    rooms.append({"loai": "boss", "data": bc["boss"], "su_kien": None})
+    rooms.append({"loai": "boss", "data": {**bc["boss"]}, "su_kien": None})
     return rooms
 
 def _scale_rooms_by_rebirth(rooms: list[dict], so_lan_ts: int) -> list[dict]:

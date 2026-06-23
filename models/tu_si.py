@@ -75,3 +75,6 @@ class TuSiDict(TypedDict, total=False):
     toa_ky: dict
     toa_ky_active: int
     toa_ky_herb: dict
+    toa_ky_pity: int
+    toa_ky_banner_featured_id: int
+    toa_ky_banner_reset_ts: int

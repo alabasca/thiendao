@@ -11,7 +11,7 @@ from cogs.views._common import *
 from utils.config import (
     TOA_KY, TOA_KY_BY_ID, TOA_KY_BY_HE,
     TOA_KY_LEVEL_MULT,
-    TOA_KY_BANNER_NORMAL, TOA_KY_BANNER_FEATURED,
+    TOA_KY_BANNER,
     TOA_KY_RARITY_POOL, TOA_KY_DUPE_TINH_HOA,
     fmt,
 )
@@ -36,9 +36,26 @@ def _parse_toa_ky(ts: dict[str, Any]) -> dict:
     return raw if isinstance(raw, dict) else {}
 
 
+
+BANNER_ROTATION_HOURS = 12
+
+def _get_current_featured(ts):
+    featured_id = ts.get('toa_ky_banner_featured_id', -1)
+    reset_ts = ts.get('toa_ky_banner_reset_ts', 0) or 0
+    now = int(time.time())
+    if featured_id < 0 or now - reset_ts >= BANNER_ROTATION_HOURS * 3600:
+        # Rotate: pick random mount
+        all_ids = list(TOA_KY_BY_ID.keys())
+        featured_id = random.choice(all_ids)
+        from utils.database import update_tu_si
+        update_tu_si(ts['user_id'], toa_ky_banner_featured_id=featured_id, toa_ky_banner_reset_ts=now)
+    mount = TOA_KY_BY_ID.get(featured_id)
+    time_left = BANNER_ROTATION_HOURS * 3600 - (now - reset_ts)
+    return mount, max(0, time_left)
+
 def _roll_rarity(pity: int) -> str:
     """Roll rarity theo pity system."""
-    banner = TOA_KY_BANNER_NORMAL
+    banner = TOA_KY_BANNER
     if pity >= banner["pity_hard"]:
         # Hard pity: guaranteed mount ≥ Linh
         r = random.random() * 100
@@ -105,12 +122,21 @@ def gacha_pull(ts: dict[str, Any], count: int = 1) -> tuple[list[dict], int, dic
             })
             pity = 0  # Reset pity
 
+    # Boost featured mount
+    featured_id = ts.get('toa_ky_banner_featured_id', -1)
+    if featured_id >= 0 and featured_id in TOA_KY_BY_ID:
+        for r in results:
+            if not r['duplicate'] and r['mount']['id'] == featured_id:
+                pass  # already got it
+            elif not r['duplicate'] and r['rarity'] in ('Linh', 'Tiên', 'Thần'):
+                if random.random() < 0.5:
+                    r['mount'] = TOA_KY_BY_ID[featured_id]
     return results, pity, kho
 
 
 def _embed_banner(ts: dict[str, Any]) -> discord.Embed:
     """Embed hiển thị banner gacha."""
-    banner = TOA_KY_BANNER_NORMAL
+    banner = TOA_KY_BANNER
     pity = ts.get("toa_ky_pity", 0) or 0
     lt = ts.get("linh_thach", 0)
 
@@ -167,14 +193,14 @@ class ToaKyGachaView(discord.ui.View):
 
         # Nút quay 1 lần
         btn1 = discord.ui.Button(
-            label=f"🎰 Quay 1 ({fmt(TOA_KY_BANNER_NORMAL['chi_phi'])} LT)",
+            label=f"🎰 Quay 1 ({fmt(0)} LT)",
             style=discord.ButtonStyle.success, row=0)
         btn1.callback = self._on_pull_1
         self.add_item(btn1)
 
         # Nút quay 10 lần
         btn10 = discord.ui.Button(
-            label=f"🎰 Quay 10 ({fmt(TOA_KY_BANNER_NORMAL['chi_phi_10'])} LT)",
+            label=f"🎰 Quay 10 ({fmt(TOA_KY_BANNER['chi_phi_10'])} LT)",
             style=discord.ButtonStyle.primary, row=0)
         btn10.callback = self._on_pull_10
         self.add_item(btn10)
@@ -203,8 +229,8 @@ class ToaKyGachaView(discord.ui.View):
 
         ts_fresh = await get_tu_si(inter.user.id)
         lt = ts_fresh.get("linh_thach", 0)
-        banner = TOA_KY_BANNER_NORMAL
-        cost = banner["chi_phi_10"] if count == 10 else banner["chi_phi"]
+        banner = TOA_KY_BANNER
+        cost = banner["chi_phi_10"]
 
         if lt < cost:
             return await safe_followup(inter,

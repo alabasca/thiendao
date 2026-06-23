@@ -396,6 +396,8 @@ async def migrate_db():
         ("toa_ky_active",      "INTEGER DEFAULT -1"),
         ("toa_ky_herb",        "TEXT DEFAULT '{}'"),
         ("toa_ky_pity",        "INTEGER DEFAULT 0"),
+        ("toa_ky_banner_featured_id", "INTEGER DEFAULT -1"),
+        ("toa_ky_banner_reset_ts",    "BIGINT DEFAULT 0"),
     ]
 
     async with pool.acquire() as conn:

@@ -161,17 +161,7 @@ TOA_KY_BANNER_NORMAL = {
     "pity_hard": 90,   # hard pity guarantee
 }
 
-TOA_KY_BANNER_FEATURED = {
-    "ten": "Banner Đặc Biệt",
-    "mo_ta": "Banner giới hạn — tăng rate mount được chọn",
-    "chi_phi": 600,
-    "chi_phi_10": 5400,
-    "featured_id": 0,       # mount được boost (admin set)
-    "featured_rate": 50.0,  # 50% rate khi trúng rarity phù hợp
-    "duration_hours": 72,   # 3 ngày
-    "pity_soft": 75,
-    "pity_hard": 90,
-}
+
 
 # Rate pool theo rarity
 TOA_KY_RARITY_POOL: dict[str, list[int]] = {

@@ -112,27 +112,38 @@ class BiCanhLoaiView(discord.ui.View):
         self._guild_id = guild_id
         self._mount_lv = mount_lv
 
-    @discord.ui.button(label="⚔️ Bí Cảnh Thường", style=discord.ButtonStyle.primary, row=0)
+    @discord.ui.button(label="⚔️ Bị Cảnh Thường", style=discord.ButtonStyle.primary, row=0)
     async def btn_thuong(self, inter):
         if inter.user.id != self._actor_id:
             return await inter.response.send_message("❌", ephemeral=True)
         await inter.response.defer(ephemeral=True)
         embed2 = _embed_bi_canh_chon(self._ts, inter.user)
-        await _send_bi_canh_embed(inter, embed2,
-            BiCanhChonView(self._parent, self._ts, actor_id=self._actor_id, guild_id=self._guild_id),
-            respond=False)
+        view2 = BiCanhChonView(self._parent, self._ts, actor_id=self._actor_id, guild_id=self._guild_id)
+        try:
+            await inter.followup.send(embed=embed2, view=view2, ephemeral=True)
+        except Exception:
+            try:
+                await inter.edit_original_response(embed=embed2, view=view2)
+            except Exception:
+                pass
 
-    @discord.ui.button(label="🐉 Bí Cảnh Tọa Kỵ", style=discord.ButtonStyle.success, row=0)
+    @discord.ui.button(label="🐉 Bị Cảnh Tọa Kỹ", style=discord.ButtonStyle.success, row=0)
     async def btn_toa_ky(self, inter):
         if inter.user.id != self._actor_id:
             return await inter.response.send_message("❌", ephemeral=True)
         if self._mount_lv < 1:
-            return await inter.response.send_message("❌ Cần có tọa kỵ level ≥ 1!", ephemeral=True)
+            return await inter.response.send_message("❌ Cần có tọa kỹ level ≥ 1!", ephemeral=True)
         await inter.response.defer(ephemeral=True)
         from cogs.views.toa_ky_bi_canh import ToaKyBiCanhView, _embed_toa_ky_bi_canh_chon
         embed3 = _embed_toa_ky_bi_canh_chon(self._ts, inter.user)
         view3 = ToaKyBiCanhView(self._parent, self._ts, actor_id=self._actor_id, guild_id=self._guild_id)
-        await _send_bi_canh_embed(inter, embed3, view3, respond=False)
+        try:
+            await inter.followup.send(embed=embed3, view=view3, ephemeral=True)
+        except Exception:
+            try:
+                await inter.edit_original_response(embed=embed3, view=view3)
+            except Exception:
+                pass
 
 class HoSoView(discord.ui.View):
     """

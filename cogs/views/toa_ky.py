@@ -10,7 +10,7 @@ from utils.config import (
     TOA_KY, TOA_KY_BY_ID, TOA_KY_BY_HE,
     TOA_KY_LEVEL_MULT, TOA_KY_LEVELUP_CG_YEU_CAU,
     TOA_KY_NGUYEN_LIEU, TOA_KY_NL_BY_ID, TOA_KY_LEVELUP_COST,
-    TOA_KY_BANNER_NORMAL, TOA_KY_BANNER_FEATURED,
+    TOA_KY_BANNER,
     TOA_KY_RARITY_POOL, TOA_KY_DUPE_TINH_HOA,
     CANH_GIOI, NGUYEN_LIEU,
 )
@@ -401,10 +401,10 @@ class ToaKyView(discord.ui.View):
             title="🎰 GACHA BANNER",
             description=(
                 "**Banner Thường:**\n"
-                f"• Chi phí: **{fmt(TOA_KY_BANNER_NORMAL['chi_phi'])} LT/lần**\n"
-                f"• 10 lần: **{fmt(TOA_KY_BANNER_NORMAL['chi_phi_10'])} LT** (giảm 10%)\n"
-                f"• Soft pity: từ lần **{TOA_KY_BANNER_NORMAL['pity_soft']}**\n"
-                f"• Hard pity: lần **{TOA_KY_BANNER_NORMAL['pity_hard']}** guaranteed\n\n"
+                f"• Chi phí: **{fmt(0)} LT/lần**\n"
+                f"• 10 lần: **{fmt(TOA_KY_BANNER['chi_phi_10'])} LT** (giảm 10%)\n"
+                f"• Soft pity: từ lần **{TOA_KY_BANNER['pity_soft']}**\n"
+                f"• Hard pity: lần **{TOA_KY_BANNER['pity_hard']}** guaranteed\n\n"
                 "**Tỷ lệ theo Rarity:**\n"
                 "• Phàm (70%): Mộc Linh Lộc, Huyền Ngư, Minh Nguyệt Lộc\n"
                 "• Linh (25%): Kim Lân, Hỏa Phượng, Địa Hành Quy, Phong Long\n"

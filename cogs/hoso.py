@@ -1117,11 +1117,12 @@ class HoSoView(discord.ui.View):
                     # Session hết hạn hoặc đã kết thúc — cleanup
                     _bc_sessions.pop(sess_key, None)
 
-            # Kiểm tra có mount không để quyết định hiển thị nút BC Tọa Kỵ
-            from cogs.hoso_utils import _get_mount_level
             embed = _embed_bi_canh_chon(ts, inter.user)
             view = BiCanhChonView(self, ts, actor_id=actor_id, guild_id=guild_id)
-            await _send_bi_canh_embed(inter, embed, view, respond=False)
+            try:
+                await inter.edit_original_response(embed=embed, view=view)
+            except Exception:
+                await safe_followup(inter, embed=embed, view=view, ephemeral=True)
         except Exception as e:
             log.error(f"_cb_bi_canh_menu user={inter.user.id}: {e}", exc_info=True)
             try:

@@ -146,11 +146,13 @@ TOA_KY_LEVELUP_COST: dict[int, dict[str, int]] = {
 # ══════════════════════════════════════════════════════
 #  BANNER GACHA
 # ══════════════════════════════════════════════════════
-TOA_KY_BANNER_NORMAL = {
+TOA_KY_BANNER = {
     "ten": "Bình Dân Tọa Kỵ",
     "mo_ta": "Banner thường — cơ hội nhận tọa kỵ ngẫu nhiên",
-    "chi_phi": 500,       # LT/lần
-    "chi_phi_10": 4500,   # LT/10 lần (giảm 10%)
+    "chi_phi_10": 50000,
+    "chi_phi_10": 50000,
+    "rotation_hours": 12,
+    "featured_rate": 50.0,
     "rates": {
         "Phàm": 70.0,
         "Linh": 25.0,

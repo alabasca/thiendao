@@ -39,6 +39,7 @@ from cogs.hoso_utils import (
     _cleanup_stale_sessions, _bc_sessions, BiCanhSession,
     _calc_stats, _calc_full_stats, SESSION_TIMEOUT_SECS,
     _scale_rooms_by_rebirth,
+    _get_mount_level,
 )
 
 def _embed_bi_canh_chon(ts: dict[str, Any], user) -> discord.Embed:

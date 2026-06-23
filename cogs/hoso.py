@@ -1119,32 +1119,8 @@ class HoSoView(discord.ui.View):
 
             # Kiểm tra có mount không để quyết định hiển thị nút BC Tọa Kỵ
             from cogs.hoso_utils import _get_mount_level
-            mount_lv = _get_mount_level(ts)
-
-            # Tạo embed chọn 2 loại BC
-            embed = discord.Embed(title="🗺️ CHỌN BÍ CẢNH", color=0x4FC3F7,
-                description="Chọn loại bí cảnh muốn thám hiểm:")
-
-            bc_thuong_desc = (
-                f"Thám hiểm {len(BI_CANH)} vùng đất cổ xưa\n"
-                f"*Monster drop: nguyên liệu, linh quả, yêu thụ, pháp bảo*"
-            )
-            embed.add_field(name="⚔️ Bí Cảnh Thường", value=bc_thuong_desc, inline=False)
-
-            from utils.config import TOA_KY_BI_CANH
-            if mount_lv > 0:
-                bc_tk_desc = (
-                    f"Có mount level {mount_lv} — farm nguyên liệu nâng cấp tọa kỵ\n"
-                    f"*{len(TOA_KY_BI_CANH)} bí cảnh mới với boss và drop đặc biệt*"
-                )
-                embed.add_field(name="🐉 Bí Cảnh Tọa Kỵ", value=bc_tk_desc, inline=False)
-            else:
-                embed.add_field(name="🔒 Bí Cảnh Tọa Kỵ",
-                    value="Cần có tọa kỵ level ≥ 1\n*Dùng `/toaky` hoặc nút 🐉 Tọa Kỵ để xem*",
-                    inline=False)
-
-            view = BiCanhLoaiView(self, ts, actor_id=actor_id, guild_id=guild_id, mount_lv=mount_lv)
-            # respond=False vì đã defer ở trên — dùng followup.send
+            embed = _embed_bi_canh_chon(ts, inter.user)
+            view = BiCanhChonView(self, ts, actor_id=actor_id, guild_id=guild_id)
             await _send_bi_canh_embed(inter, embed, view, respond=False)
         except Exception as e:
             log.error(f"_cb_bi_canh_menu user={inter.user.id}: {e}", exc_info=True)

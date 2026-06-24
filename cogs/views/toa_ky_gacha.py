@@ -193,7 +193,7 @@ class ToaKyGachaView(discord.ui.View):
 
         # Nút quay 1 lần
         btn1 = discord.ui.Button(
-            label=f"🎰 Quay 1 ({fmt(0)} LT)",
+            label=f"🎰 Quay 1 ({fmt(TOA_KY_BANNER['chi_phi'])} LT)",
             style=discord.ButtonStyle.success, row=0)
         btn1.callback = self._on_pull_1
         self.add_item(btn1)
@@ -230,7 +230,7 @@ class ToaKyGachaView(discord.ui.View):
         ts_fresh = await get_tu_si(inter.user.id)
         lt = ts_fresh.get("linh_thach", 0)
         banner = TOA_KY_BANNER
-        cost = banner["chi_phi_10"]
+        cost = banner["chi_phi_10"] if count == 10 else banner["chi_phi"] * count
 
         if lt < cost:
             return await safe_followup(inter,

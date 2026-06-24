@@ -207,7 +207,7 @@ class ToaKyView(discord.ui.View):
         btn_gacha = discord.ui.Button(
             label="🎰 Gacha", style=discord.ButtonStyle.success, row=1)
         btn_gacha.callback = self._on_gacha
-        self.add_item(btn_gacha)
+        # Nút bí cảnh tọa kỵ        btn_bc = discord.ui.Button(            label="🗺️ Bí Cảnh", style=discord.ButtonStyle.primary, row=1)        btn_bc.callback = self._on_bicanh        self.add_item(btn_bc)        self.add_item(btn_gacha)
 
         # Nút danh sách tất cả
         btn_list = discord.ui.Button(
@@ -415,6 +415,19 @@ class ToaKyView(discord.ui.View):
             color=0x57F287)
 
         await safe_followup(inter, embeds=[e1, e2], ephemeral=True)
+
+    async def _on_bicanh(self, inter: discord.Interaction):
+        if inter.user.id != self.actor_id:
+            return await inter.response.send_message("❌", ephemeral=True)
+        try:
+            from cogs.views.toa_ky_bi_canh import ToaKyBiCanhView, _embed_toa_ky_bi_canh_chon
+            ts_fresh = await get_tu_si(inter.user.id)
+            embed = _embed_toa_ky_bi_canh_chon(ts_fresh, inter.user)
+            view = ToaKyBiCanhView(self.parent, ts_fresh, actor_id=self.actor_id, guild_id=0)
+            await inter.response.send_message(embed=embed, view=view, ephemeral=True)
+        except Exception as e:
+            log.error(f"_on_bicanh user={inter.user.id}: {e}", exc_info=True)
+            await inter.response.send_message(f"❌ Lỗi: {e}", ephemeral=True)
 
     async def _on_back(self, inter: discord.Interaction):
         from cogs.hoso_utils import _back_to_hoso

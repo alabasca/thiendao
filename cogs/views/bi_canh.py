@@ -259,13 +259,6 @@ class BiCanhChonView(discord.ui.View):
                 value=str(bc["id"]),
                 emoji=bc["emoji"],
                 description=desc[:100]))
-        mount_lv = _get_mount_level(ts)
-        if mount_lv > 0:
-            opts.append(discord.SelectOption(
-                label="🐉 Bí Cảnh Tọa Kỹ",
-                value="tk_0",
-                emoji="🐉",
-                description=f"Farm nguyên liệu nâng cấp tọa kỹ (Lv{mount_lv})"))
         select = discord.ui.Select(
             placeholder="Chọn Bí cảnh để khám phá...",
             options=opts,
@@ -308,14 +301,7 @@ class BiCanhChonView(discord.ui.View):
             return await inter.response.send_message("❌", ephemeral=True)
         # Refresh ts để thể lực hiển thị chính xác
         self.ts = await get_tu_si(self.actor_id)
-        val = inter.data["values"][0]
-        if val.startswith("tk_"):
-            from cogs.views.toa_ky_bi_canh import ToaKyBiCanhView, _embed_toa_ky_bi_canh_chon
-            embed3 = _embed_toa_ky_bi_canh_chon(self.ts, inter.user)
-            view3 = ToaKyBiCanhView(self.parent, self.ts, actor_id=self.actor_id, guild_id=self.guild_id)
-            await inter.response.send_message(embed=embed3, view=view3, ephemeral=True)
-            return
-        bc_id = int(val)
+        bc_id = int(inter.data["values"][0])
         if bc_id < 0 or bc_id >= len(BI_CANH):
             return await inter.response.send_message("❌ Bí cảnh không hợp lệ!", ephemeral=True)
         ok    = self.ts["canh_gioi"] >= bc["cap_toi_thieu"]

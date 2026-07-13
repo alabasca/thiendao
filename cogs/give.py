@@ -676,10 +676,41 @@ async def give_tong_tuvi(inter: discord.Interaction, nguoi_dung: discord.Member,
     await safe_followup(inter, embed=embed, ephemeral=True)
 
 
+@app_commands.command(name="admin_out", description="[Owner] Bot rời khỏi tất cả server đang có mặt")
+@app_commands.describe(xac_nhan="Nhập 'XAC NHAN OUT' để xác nhận")
+async def admin_out(inter: discord.Interaction, xac_nhan: str):
+    if inter.user.id not in OWNER_IDS:
+        return await inter.response.send_message("❌ Chỉ Owner mới dùng được lệnh này.", ephemeral=True)
+    if xac_nhan.strip() != "XAC NHAN OUT":
+        return await inter.response.send_message(
+            "❌ Nhập sai xác nhận. Phải nhập chính xác: `XAC NHAN OUT`", ephemeral=True)
+
+    await inter.response.defer(ephemeral=True)
+    guilds = list(inter.client.guilds)
+    left, failed = [], []
+    for g in guilds:
+        try:
+            await g.leave()
+            left.append(g.name)
+        except Exception as e:
+            failed.append(f"{g.name} ({e})")
+
+    lines = [f"✅ Đã rời **{len(left)}** server"]
+    if left:
+        lines.append("```\n" + "\n".join(f"• {n}" for n in left) + "\n```")
+    if failed:
+        lines.append(f"❌ Thất bại ({len(failed)}):")
+        lines.append("```\n" + "\n".join(failed) + "\n```")
+    embed = discord.Embed(title="🚪 BOT ĐÃ RỜI TOÀN BỘ SERVER",
+                          description="\n".join(lines), color=0xED4245)
+    await safe_followup(inter, embed=embed, ephemeral=True)
+
+
 class GiveCog(commands.Cog, name="Admin Give"):
     def __init__(self, bot):
         self.bot = bot
         bot.tree.add_command(give_group)
+        bot.tree.add_command(admin_out)
 
         @give_group.error
         async def _give_error(inter: discord.Interaction, error: app_commands.AppCommandError):
@@ -701,6 +732,7 @@ class GiveCog(commands.Cog, name="Admin Give"):
 
     async def cog_unload(self):
         self.bot.tree.remove_command("give")
+        self.bot.tree.remove_command("admin_out")
 
 
 async def setup(bot):
